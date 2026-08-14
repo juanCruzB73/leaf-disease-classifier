@@ -1,0 +1,14 @@
+{
+  "model": "mobilenet_v3",
+  "best_val_acc": 0.14583333333333334,
+  "history": [
+    {
+      "stage": "finetune",
+      "epoch": 1,
+      "train_loss": 2.1067768335342407,
+      "train_acc": 0.17916666666666667,
+      "val_loss": 2.1427011489868164,
+      "val_acc": 0.14583333333333334
+    }
+  ]
+}

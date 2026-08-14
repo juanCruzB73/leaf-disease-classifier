@@ -1,0 +1,11 @@
+{
+  "vg_black_rot": 0,
+  "vg_downy_mildew": 1,
+  "vg_grey_mould": 2,
+  "vg_powdery_mildew": 3,
+  "vines_grape": 4,
+  "vines_leaf": 5,
+  "vl_black_rot": 6,
+  "vl_downy_mildew": 7,
+  "vl_powdery_mildew": 8
+}

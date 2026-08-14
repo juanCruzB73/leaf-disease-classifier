@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# dataset (large, reproducible from prepare_data.py)
+10573036.zip
+data/raw/
+data/processed/
+
+# trained artifacts (checkpoints are large; label_map.json and metrics are kept)
+models/*.pt
+models/*.pth
+
+
+.pytest_cache/
