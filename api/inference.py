@@ -3,8 +3,9 @@
 Which model/checkpoint to serve is controlled by two env vars so the API doesn't
 need code changes once train.py + evaluate.py pick a winner:
 
-    API_MODEL_NAME  - "resnet50" or "mobilenet_v3" (default: mobilenet_v3)
+    API_MODEL_NAME  - "resnet50" or "mobilenet_v3" (default: resnet50)
     API_MODEL_PATH  - path to the .pt checkpoint (default: models/<API_MODEL_NAME>/best_model.pt)
+    API_LABEL_MAP_PATH - matching class map (default: models/label_map.json)
 """
 import io
 import json
@@ -24,9 +25,9 @@ IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 IMAGE_SIZE = 224
 
-MODEL_NAME = os.environ.get("API_MODEL_NAME", "mobilenet_v3")
+MODEL_NAME = os.environ.get("API_MODEL_NAME", "resnet50")
 MODEL_PATH = Path(os.environ.get("API_MODEL_PATH", ROOT / "models" / MODEL_NAME / "best_model.pt"))
-LABEL_MAP_PATH = ROOT / "models" / "label_map.json"
+LABEL_MAP_PATH = Path(os.environ.get("API_LABEL_MAP_PATH", ROOT / "models" / "label_map.json"))
 
 _preprocess = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
@@ -58,7 +59,9 @@ def load_model():
             f"(or set API_MODEL_NAME / API_MODEL_PATH to a checkpoint that exists)."
         )
 
-    model, _, _ = build_model(MODEL_NAME, len(label_map))
+    # The checkpoint already contains every weight; avoid downloading ImageNet
+    # weights when the API starts in an offline/production environment.
+    model, _, _ = build_model(MODEL_NAME, len(label_map), pretrained=False)
     model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
     model.eval()
     _model = model

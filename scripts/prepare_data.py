@@ -159,8 +159,20 @@ def main():
     raw_dir = Path(args.raw_dir)
     out_dir = Path(args.out_dir)
 
-    print(f"Extracting {zip_path} -> {raw_dir}")
-    extract_if_needed(zip_path, raw_dir)
+    annotations_ready = (
+        (raw_dir / "annotations" / "train.json").exists()
+        and (raw_dir / "annotations" / "validation.json").exists()
+        and (raw_dir / "images").is_dir()
+    )
+    if zip_path.exists():
+        print(f"Extracting {zip_path} -> {raw_dir}")
+        extract_if_needed(zip_path, raw_dir)
+    elif annotations_ready:
+        print(f"{zip_path} not found; using the already extracted dataset in {raw_dir}")
+    else:
+        raise FileNotFoundError(
+            f"Neither {zip_path} nor a complete extracted dataset in {raw_dir} was found."
+        )
     images_dir = raw_dir / "images"
 
     train_coco, val_coco = load_annotations(raw_dir)

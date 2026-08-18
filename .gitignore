@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+.idea/
 .venv/
 venv/
 
@@ -7,6 +8,8 @@ venv/
 10573036.zip
 data/raw/
 data/processed/
+data/diagnosis_processed/
+Grapes Disease Dataset/
 
 # trained artifacts (checkpoints are large; label_map.json and metrics are kept)
 models/*.pt

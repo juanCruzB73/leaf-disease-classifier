@@ -26,21 +26,28 @@ def main():
     parser.add_argument("--model", choices=["resnet50", "mobilenet_v3"], required=True)
     parser.add_argument("--data-dir", default=str(ROOT / "data" / "processed"))
     parser.add_argument("--models-dir", default=str(ROOT / "models"))
+    parser.add_argument("--label-map", default="",
+                        help="Class map JSON (default: <models-dir>/label_map.json).")
+    parser.add_argument("--run-name", default="",
+                        help="Checkpoint subdirectory (default: the architecture name).")
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--batch-size", type=int, default=32)
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     models_dir = Path(args.models_dir)
-    label_map = load_label_map(models_dir)
+    label_map_path = Path(args.label_map) if args.label_map else models_dir / "label_map.json"
+    with open(label_map_path, encoding="utf-8") as f:
+        label_map = json.load(f)
     idx_to_class = {v: k for k, v in label_map.items()}
     num_classes = len(label_map)
 
     test_ds = make_dataset(Path(args.data_dir), "test", label_map, args.image_size)
     test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False)
 
-    model, _, _ = build_model(args.model, num_classes)
-    ckpt_path = models_dir / args.model / "best_model.pt"
+    model, _, _ = build_model(args.model, num_classes, pretrained=False)
+    run_name = args.run_name or args.model
+    ckpt_path = models_dir / run_name / "best_model.pt"
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.to(device).eval()
 
@@ -72,7 +79,7 @@ def main():
         "confusion_matrix": cm.tolist(),
         "class_order": class_names,
     }
-    out_path = models_dir / args.model / "test_metrics.json"
+    out_path = models_dir / run_name / "test_metrics.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
     print(f"\nWrote {out_path}")

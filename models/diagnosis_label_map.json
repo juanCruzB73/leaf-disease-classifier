@@ -1,0 +1,11 @@
+{
+  "healthy_leaf": 0,
+  "vg_black_rot": 1,
+  "vg_downy_mildew": 2,
+  "vg_grey_mould": 3,
+  "vg_powdery_mildew": 4,
+  "vl_bacterial_spot": 5,
+  "vl_black_rot": 6,
+  "vl_downy_mildew": 7,
+  "vl_powdery_mildew": 8
+}

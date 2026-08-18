@@ -13,6 +13,17 @@ def _startup():
     load_model()
 
 
+@app.get("/")
+def root():
+    return {
+        "nombre": "Leaf Disease Classifier API",
+        "estado": "ok",
+        "documentacion": "/docs",
+        "health": "/health",
+        "prediccion": "POST /predict",
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

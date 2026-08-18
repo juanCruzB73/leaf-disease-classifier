@@ -16,20 +16,23 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import models
+from sklearn.metrics import f1_score
 
 from dataset import load_label_map, make_dataset
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def build_model(name: str, num_classes: int):
+def build_model(name: str, num_classes: int, pretrained: bool = True):
     if name == "resnet50":
-        net = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+        weights = models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+        net = models.resnet50(weights=weights)
         backbone_params = [p for n, p in net.named_parameters() if not n.startswith("fc.")]
         net.fc = nn.Linear(net.fc.in_features, num_classes)
         head_params = list(net.fc.parameters())
     elif name == "mobilenet_v3":
-        net = models.mobilenet_v3_large(weights=models.MobileNet_V3_Large_Weights.IMAGENET1K_V2)
+        weights = models.MobileNet_V3_Large_Weights.IMAGENET1K_V2 if pretrained else None
+        net = models.mobilenet_v3_large(weights=weights)
         backbone_params = [p for n, p in net.named_parameters() if not n.startswith("classifier.3")]
         in_features = net.classifier[3].in_features
         net.classifier[3] = nn.Linear(in_features, num_classes)
@@ -49,6 +52,7 @@ def class_weights(dataset, num_classes, device):
 def run_epoch(model, loader, criterion, optimizer, device, train: bool):
     model.train(train)
     total_loss, correct, n = 0.0, 0, 0
+    predictions, targets = [], []
     with torch.set_grad_enabled(train):
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
@@ -60,9 +64,13 @@ def run_epoch(model, loader, criterion, optimizer, device, train: bool):
                 loss.backward()
                 optimizer.step()
             total_loss += loss.item() * images.size(0)
-            correct += (outputs.argmax(1) == labels).sum().item()
+            predicted = outputs.argmax(1)
+            correct += (predicted == labels).sum().item()
             n += images.size(0)
-    return total_loss / n, correct / n
+            predictions.extend(predicted.detach().cpu().tolist())
+            targets.extend(labels.detach().cpu().tolist())
+    macro_f1 = f1_score(targets, predictions, average="macro", zero_division=0)
+    return total_loss / n, correct / n, macro_f1
 
 
 def main():
@@ -70,6 +78,12 @@ def main():
     parser.add_argument("--model", choices=["resnet50", "mobilenet_v3"], required=True)
     parser.add_argument("--data-dir", default=str(ROOT / "data" / "processed"))
     parser.add_argument("--models-dir", default=str(ROOT / "models"))
+    parser.add_argument("--label-map", default="",
+                        help="Class map JSON (default: <models-dir>/label_map.json).")
+    parser.add_argument("--run-name", default="",
+                        help="Artifact subdirectory (default: the architecture name).")
+    parser.add_argument("--no-pretrained", action="store_true",
+                        help="Do not download/use ImageNet weights (mainly for offline smoke tests).")
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--epochs", type=int, default=5, help="Head-only warmup epochs (backbone frozen).")
@@ -86,7 +100,9 @@ def main():
 
     data_dir = Path(args.data_dir)
     models_dir = Path(args.models_dir)
-    label_map = load_label_map(models_dir)
+    label_map_path = Path(args.label_map) if args.label_map else models_dir / "label_map.json"
+    with open(label_map_path, encoding="utf-8") as f:
+        label_map = json.load(f)
     num_classes = len(label_map)
 
     train_ds = make_dataset(data_dir, "train", label_map, args.image_size)
@@ -109,24 +125,32 @@ def main():
         train_loader = _Capped(train_loader, args.limit_batches)
         val_loader = _Capped(val_loader, max(1, args.limit_batches // 4))
 
-    model, backbone_params, head_params = build_model(args.model, num_classes)
+    model, backbone_params, head_params = build_model(
+        args.model, num_classes, pretrained=not args.no_pretrained
+    )
     model.to(device)
 
     weights = class_weights(train_ds, num_classes, device)
     criterion = nn.CrossEntropyLoss(weight=weights)
 
-    out_dir = models_dir / args.model
+    out_dir = models_dir / (args.run_name or args.model)
     out_dir.mkdir(parents=True, exist_ok=True)
+    shutil_label_map = out_dir / "label_map.json"
+    with open(shutil_label_map, "w", encoding="utf-8") as f:
+        json.dump(label_map, f, indent=2, ensure_ascii=False)
 
     history = []
     best_val_acc = -1.0
+    best_val_macro_f1 = -1.0
 
-    def maybe_save_best(val_acc, stage, epoch):
-        nonlocal best_val_acc
-        if val_acc > best_val_acc:
+    def maybe_save_best(val_acc, val_macro_f1, stage, epoch):
+        nonlocal best_val_acc, best_val_macro_f1
+        if val_macro_f1 > best_val_macro_f1:
             best_val_acc = val_acc
+            best_val_macro_f1 = val_macro_f1
             torch.save(model.state_dict(), out_dir / "best_model.pt")
-            print(f"  -> new best ({stage} epoch {epoch}, val_acc={val_acc:.4f}), saved best_model.pt")
+            print(f"  -> new best ({stage} epoch {epoch}, val_macro_f1={val_macro_f1:.4f}, "
+                  f"val_acc={val_acc:.4f}), saved best_model.pt")
 
     # Stage 1: warmup — backbone frozen, only the new head trains.
     for p in backbone_params:
@@ -134,14 +158,16 @@ def main():
     optimizer = torch.optim.Adam(head_params, lr=args.lr)
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()
-        train_loss, train_acc = run_epoch(model, train_loader, criterion, optimizer, device, train=True)
-        val_loss, val_acc = run_epoch(model, val_loader, criterion, optimizer, device, train=False)
+        train_loss, train_acc, train_macro_f1 = run_epoch(model, train_loader, criterion, optimizer, device, train=True)
+        val_loss, val_acc, val_macro_f1 = run_epoch(model, val_loader, criterion, optimizer, device, train=False)
         dt = time.time() - t0
         print(f"[warmup {epoch}/{args.epochs}] train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
-              f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} ({dt:.1f}s)")
+              f"train_macro_f1={train_macro_f1:.4f} val_loss={val_loss:.4f} "
+              f"val_acc={val_acc:.4f} val_macro_f1={val_macro_f1:.4f} ({dt:.1f}s)")
         history.append({"stage": "warmup", "epoch": epoch, "train_loss": train_loss,
-                         "train_acc": train_acc, "val_loss": val_loss, "val_acc": val_acc})
-        maybe_save_best(val_acc, "warmup", epoch)
+                         "train_acc": train_acc, "train_macro_f1": train_macro_f1,
+                         "val_loss": val_loss, "val_acc": val_acc, "val_macro_f1": val_macro_f1})
+        maybe_save_best(val_acc, val_macro_f1, "warmup", epoch)
 
     # Stage 2: fine-tune — unfreeze the backbone, train everything at a lower LR.
     for p in backbone_params:
@@ -149,19 +175,23 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.finetune_lr)
     for epoch in range(1, args.finetune_epochs + 1):
         t0 = time.time()
-        train_loss, train_acc = run_epoch(model, train_loader, criterion, optimizer, device, train=True)
-        val_loss, val_acc = run_epoch(model, val_loader, criterion, optimizer, device, train=False)
+        train_loss, train_acc, train_macro_f1 = run_epoch(model, train_loader, criterion, optimizer, device, train=True)
+        val_loss, val_acc, val_macro_f1 = run_epoch(model, val_loader, criterion, optimizer, device, train=False)
         dt = time.time() - t0
         print(f"[finetune {epoch}/{args.finetune_epochs}] train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
-              f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} ({dt:.1f}s)")
+              f"train_macro_f1={train_macro_f1:.4f} val_loss={val_loss:.4f} "
+              f"val_acc={val_acc:.4f} val_macro_f1={val_macro_f1:.4f} ({dt:.1f}s)")
         history.append({"stage": "finetune", "epoch": epoch, "train_loss": train_loss,
-                         "train_acc": train_acc, "val_loss": val_loss, "val_acc": val_acc})
-        maybe_save_best(val_acc, "finetune", epoch)
+                         "train_acc": train_acc, "train_macro_f1": train_macro_f1,
+                         "val_loss": val_loss, "val_acc": val_acc, "val_macro_f1": val_macro_f1})
+        maybe_save_best(val_acc, val_macro_f1, "finetune", epoch)
 
     torch.save(model.state_dict(), out_dir / "last_model.pt")
     with open(out_dir / "train_history.json", "w", encoding="utf-8") as f:
-        json.dump({"model": args.model, "best_val_acc": best_val_acc, "history": history}, f, indent=2)
-    print(f"\nDone. best_val_acc={best_val_acc:.4f}. Artifacts in {out_dir}")
+        json.dump({"model": args.model, "best_val_acc": best_val_acc,
+                   "best_val_macro_f1": best_val_macro_f1, "history": history}, f, indent=2)
+    print(f"\nDone. best_val_macro_f1={best_val_macro_f1:.4f}, "
+          f"best_val_acc={best_val_acc:.4f}. Artifacts in {out_dir}")
 
 
 if __name__ == "__main__":
