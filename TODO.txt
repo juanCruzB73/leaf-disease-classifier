@@ -1,0 +1,67 @@
+TODO — hacer que el modelo diagnostique enfermedades, no solo organo (hoja/racimo)
+====================================================================================
+
+Problema actual: el modelo (models/resnet50, models/mobilenet_v3) fue entrenado con
+9 clases que incluyen "vines_grape" y "vines_leaf" (= "hay un racimo/hoja acá", NO
+"esta sano"). Esas dos clases aparecen en fotos que tambien tienen enfermedades
+visibles, asi que el modelo aprende a reconocer el organo en vez de la enfermedad.
+Confirmado en vivo con Streamlit: una foto de racimo podrido -> "Racimo de vid" 86%
+(sin avisar de la enfermedad), y una hoja con necrosis marginal -> "incierto" 46%
+porque esa enfermedad ni siquiera esta en el dataset.
+
+1. Conseguir el dataset externo
+   - Descargar "Grapes Disease Dataset" (Kaggle) con las carpetas: Healthy Leaves,
+     Bacterial Rot, Downey Mildew, Powdery Mildew.
+   - Copiarlo a la raiz del repo como "Grapes Disease Dataset/" (esta en .gitignore).
+
+2. Regenerar el dataset de diagnostico
+   - python scripts/prepare_diagnosis_data.py
+   - Confirma que data/diagnosis_processed/{train,val,test} y
+     models/diagnosis_label_map.json queden sin "vines_grape"/"vines_leaf".
+
+3. Reentrenar (Colab / maquina con GPU)
+   python scripts/train.py --model resnet50 \
+     --data-dir data/diagnosis_processed \
+     --label-map models/diagnosis_label_map.json \
+     --run-name diagnosis_resnet50 \
+     --epochs 8 --finetune-epochs 15
+
+   python scripts/evaluate.py --model resnet50 \
+     --data-dir data/diagnosis_processed \
+     --label-map models/diagnosis_label_map.json \
+     --run-name diagnosis_resnet50
+
+   (repetir con --model mobilenet_v3 y comparar test_metrics.json antes de elegir)
+
+4. Cubrir enfermedades que hoy faltan en el dataset
+   - La hoja con necrosis marginal/rojiza que probamos no matchea ninguna de las
+     4 clases vl_* actuales (bacterial_spot, black_rot, downy_mildew, powdery_mildew).
+     Parece esca / escaldadura foliar / estres nutricional -> revisar si hay que
+     sumar esa clase o agregar una clase "otra_o_desconocida" en vez de forzar el
+     softmax a repartir entre las 7 que si conoce.
+   - Sumar clase "healthy_grape" (hoy solo hay healthy_leaf en el dataset extra).
+
+5. Resolver el mismatch escena-completa vs. recorte de entrenamiento
+   - Hoy se entrena con crops ajustados a una sola hoja/racimo (bbox + 15% padding,
+     224x224). Las fotos reales de Streamlit son de escena completa (varias hojas,
+     racimos, fondo, tutores). Esto degrada mucho la confianza en produccion.
+   - Opciones a evaluar (elegir una, no las tres):
+     a) Agregar deteccion previa (localizar hoja/racimo en la foto) antes de clasificar.
+     b) Reentrenar tambien con fotos de escena completa / heavy zoom-out augmentation.
+     c) Pedirle al usuario que recorte/encuadre la hoja o racimo antes de subir la foto.
+
+6. Calibracion y umbral de incertidumbre
+   - Ya implementado en api/inference.py: API_TEMPERATURE y API_CONFIDENCE_THRESHOLD
+     (default 0.5) devuelven "es_incierto": true por debajo del umbral.
+   - Falta: ajustar API_TEMPERATURE de verdad sobre el split de validacion del modelo
+     nuevo (minimizando NLL o ECE) en vez de dejarlo en 1.0 por defecto.
+
+7. (Opcional, mas ambicioso) separar en dos modelos
+   - Uno para enfermedades de hoja (vl_*) y otro para racimo (vg_*), en vez de un
+     unico clasificador de 7+ clases. Puede simplificar el entrenamiento si el punto 4
+     hace crecer mucho la lista de clases por organo.
+
+8. Una vez elegido el mejor checkpoint, apuntar la app al modelo nuevo
+   - export API_MODEL_PATH=models/diagnosis_resnet50/best_model.pt
+   - export API_LABEL_MAP_PATH=models/diagnosis_resnet50/label_map.json
+   - Actualizar CLASS_NAMES en streamlit_app.py con los nombres de las clases nuevas.

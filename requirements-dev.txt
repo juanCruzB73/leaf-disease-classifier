@@ -1,0 +1,3 @@
+# extra tools for local UI smoke-testing (not needed to run the API/Streamlit app)
+-r requirements.txt
+playwright

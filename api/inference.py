@@ -29,6 +29,13 @@ MODEL_NAME = os.environ.get("API_MODEL_NAME", "resnet50")
 MODEL_PATH = Path(os.environ.get("API_MODEL_PATH", ROOT / "models" / MODEL_NAME / "best_model.pt"))
 LABEL_MAP_PATH = Path(os.environ.get("API_LABEL_MAP_PATH", ROOT / "models" / "label_map.json"))
 
+# Softmax temperature for probability calibration (>1 softens overconfident logits;
+# fit on a held-out split, e.g. by minimizing NLL/ECE, then set via env var).
+TEMPERATURE = float(os.environ.get("API_TEMPERATURE", "1.0"))
+# Below this top-class probability the prediction is flagged as unreliable instead
+# of being reported as a confident diagnosis.
+CONFIDENCE_THRESHOLD = float(os.environ.get("API_CONFIDENCE_THRESHOLD", "0.5"))
+
 _preprocess = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
     transforms.ToTensor(),
@@ -75,14 +82,16 @@ def predict(image_bytes: bytes) -> dict:
 
     with torch.no_grad():
         logits = _model(tensor)
-        probs = torch.softmax(logits, dim=1)[0]
+        probs = torch.softmax(logits / TEMPERATURE, dim=1)[0]
 
     probabilidades = {_idx_to_class[i]: round(p.item(), 4) for i, p in enumerate(probs)}
     top_idx = int(probs.argmax())
+    confianza = float(probs[top_idx])
 
     return {
         "clase_predicha": _idx_to_class[top_idx],
-        "confianza": round(float(probs[top_idx]), 4),
+        "confianza": round(confianza, 4),
+        "es_incierto": confianza < CONFIDENCE_THRESHOLD,
         "probabilidades": probabilidades,
         "modelo": MODEL_NAME,
     }

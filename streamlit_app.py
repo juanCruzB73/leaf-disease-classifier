@@ -66,12 +66,16 @@ else:
     confidence = result["confianza"]
     with right:
         st.subheader("Resultado")
-        st.success(CLASS_NAMES.get(predicted_class, predicted_class))
+        if result.get("es_incierto"):
+            st.warning(
+                f"Resultado incierto (mejor candidata: {CLASS_NAMES.get(predicted_class, predicted_class)})."
+                " La confianza es demasiado baja para reportarlo como diagnóstico."
+            )
+        else:
+            st.success(CLASS_NAMES.get(predicted_class, predicted_class))
         st.metric("Confianza", f"{confidence:.1%}")
         st.caption(f"Modelo: {result['modelo']}")
-        if confidence < 0.5:
-            st.warning("La confianza es baja; interpretá el resultado con precaución.")
-        if "healthy_leaf" in result["probabilidades"]:
+        if "healthy_leaf" in result["probabilidades"] and "healthy_grape" not in result["probabilidades"]:
             st.caption(
                 "El modelo reconoce hojas sanas, pero todavía no dispone de una clase "
                 "de racimo sano."

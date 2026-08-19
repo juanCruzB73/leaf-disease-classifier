@@ -2,12 +2,46 @@
 
 Clasificador de enfermedades de vid con PyTorch y una API HTTP construida con FastAPI.
 
-## Ejecutar la API
+## Setup en una máquina nueva
 
-Las dependencias están instaladas en `.venv` y el modelo predeterminado es ResNet50.
+Requiere Python 3.10+ instalado. Clonar el repo y correr el script de setup para el
+sistema operativo correspondiente — crea `.venv` e instala `requirements.txt`:
+
+**Linux / macOS**
 
 ```bash
+git clone <url-del-repo>
+cd leaf-disease-classifier
+chmod +x setup.sh
+./setup.sh
 source .venv/bin/activate
+```
+
+**Windows (PowerShell)**
+
+```powershell
+git clone <url-del-repo>
+cd leaf-disease-classifier
+.\setup.ps1
+.\.venv\Scripts\Activate.ps1
+```
+
+Para tests de UI con Playwright (opcional, no hace falta para usar la app), agregar
+`--dev` (`./setup.sh --dev`) o `-Dev` (`.\setup.ps1 -Dev`) — instala Playwright y
+descarga un Chromium headless.
+
+`10573036.zip` (dataset COCO original) y el `Grapes Disease Dataset/` externo no
+están en el repo (ver `.gitignore`, son pesados); hay que copiarlos a la raíz del
+proyecto antes de correr `scripts/prepare_data.py` / `scripts/prepare_diagnosis_data.py`.
+Si ya tenés `data/processed` y un checkpoint en `models/`, podés saltar directo a
+"Ejecutar la API" o a la sección de Streamlit.
+
+## Ejecutar la API
+
+El modelo predeterminado es ResNet50.
+
+```bash
+source .venv/bin/activate  # o .\.venv\Scripts\Activate.ps1 en Windows
 uvicorn api.main:app --reload
 ```
 
@@ -29,9 +63,12 @@ API_MODEL_NAME=mobilenet_v3 uvicorn api.main:app
 La interfaz funciona directamente con el modelo local; no es necesario iniciar la API.
 
 ```bash
-source .venv/bin/activate
-streamlit run streamlit_app.py
+source .venv/bin/activate  # o .\.venv\Scripts\Activate.ps1 en Windows
+streamlit run streamlit_app.py --server.headless true
 ```
+
+(`--server.headless true` evita el prompt interactivo de "Welcome to Streamlit"
+la primera vez que se corre en una máquina nueva.)
 
 Abrí <http://localhost:8501>, seleccioná una imagen JPEG o PNG y la aplicación
 mostrará la predicción, su confianza y un gráfico con las nueve probabilidades.
@@ -89,6 +126,14 @@ API_MODEL_PATH=models/diagnosis_resnet50/best_model.pt \
 API_LABEL_MAP_PATH=models/diagnosis_resnet50/label_map.json \
 streamlit run streamlit_app.py
 ```
+
+`api/inference.py` acepta además:
+
+- `API_CONFIDENCE_THRESHOLD` (default `0.5`): por debajo de este valor la respuesta
+  incluye `"es_incierto": true` en vez de reportarse como diagnóstico confiable.
+- `API_TEMPERATURE` (default `1.0`): temperatura de softmax para calibrar las
+  probabilidades (ajustar sobre el split de validación, p. ej. minimizando NLL o ECE,
+  antes de fijarla en producción).
 
 ## Endpoints
 
