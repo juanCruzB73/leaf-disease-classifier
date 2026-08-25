@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SPLITS = ("train", "val", "test")
 EXTRA_CLASS_MAP = {
     "Healthy Leaves": "healthy_leaf",
-    "Bacterial Rot": "vl_bacterial_spot",
-    "Downey Mildew": "vl_downy_mildew",
+    "Bacterial Leaf Spot": "vl_bacterial_spot",
+    "Downy Mildew": "vl_downy_mildew",
     "Powdery Mildew": "vl_powdery_mildew",
 }
 
