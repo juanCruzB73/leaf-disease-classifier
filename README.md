@@ -38,7 +38,9 @@ Si ya tenés `data/processed` y un checkpoint en `models/`, podés saltar direct
 
 ## Ejecutar la API
 
-El modelo predeterminado es ResNet50.
+El modelo predeterminado es el ResNet50 de diagnóstico. La aplicación carga
+automáticamente el `label_map.json` ubicado junto a su checkpoint, para garantizar
+que los índices de salida se interpreten con las mismas clases usadas al entrenar.
 
 ```bash
 source .venv/bin/activate  # o .\.venv\Scripts\Activate.ps1 en Windows
@@ -52,7 +54,8 @@ Para clasificar una imagen:
 curl -X POST -F "file=@hoja.jpg;type=image/jpeg" http://127.0.0.1:8000/predict
 ```
 
-Se puede servir MobileNetV3 sin cambiar el código:
+Se puede servir el MobileNetV3 anterior sin cambiar el código. Como ese directorio
+no incluye un mapa propio, se usa el mapa global legado de `models/label_map.json`:
 
 ```bash
 API_MODEL_NAME=mobilenet_v3 uvicorn api.main:app
@@ -75,18 +78,19 @@ mostrará la predicción, su confianza y un gráfico con las nueve probabilidade
 
 ## Datos, entrenamiento y evaluación
 
-Los datos procesados están separados por clase en `data/processed/{train,val,test}`.
-Para volver a generarlos desde `data/raw`:
+El dataset original está separado por clase en `data/processed/{train,val,test}`.
+Para volver a generarlo desde `data/raw`:
 
 ```bash
 python scripts/prepare_data.py
 ```
 
-Para entrenar y evaluar una arquitectura:
+Los siguientes comandos reproducen únicamente el experimento inicial y no deben
+usarse para sobrescribir el ResNet50 de diagnóstico actual:
 
 ```bash
-python scripts/train.py --model resnet50 --epochs 5 --finetune-epochs 5
-python scripts/evaluate.py --model resnet50
+python scripts/train.py --model resnet50 --run-name resnet50_legacy --epochs 5 --finetune-epochs 5
+python scripts/evaluate.py --model resnet50 --run-name resnet50_legacy
 ```
 
 El mejor checkpoint se guarda en `models/<modelo>/best_model.pt` y las métricas de
@@ -102,30 +106,33 @@ adicional, y elimina duplicados antes de dividir:
 python scripts/prepare_diagnosis_data.py
 ```
 
-Entrenamiento y evaluación independientes del modelo anterior:
+El ResNet50 predeterminado ya fue reentrenado con este dataset. Para reproducir el
+entrenamiento y sobrescribir sus artefactos:
 
 ```bash
 python scripts/train.py \
   --model resnet50 \
   --data-dir data/diagnosis_processed \
   --label-map models/diagnosis_label_map.json \
-  --run-name diagnosis_resnet50 \
+  --run-name resnet50 \
   --epochs 8 --finetune-epochs 15
 
 python scripts/evaluate.py \
   --model resnet50 \
   --data-dir data/diagnosis_processed \
   --label-map models/diagnosis_label_map.json \
-  --run-name diagnosis_resnet50
+  --run-name resnet50
 ```
 
-Para servir el nuevo modelo después del entrenamiento:
+Para servir un checkpoint alternativo después del entrenamiento:
 
 ```bash
-API_MODEL_PATH=models/diagnosis_resnet50/best_model.pt \
-API_LABEL_MAP_PATH=models/diagnosis_resnet50/label_map.json \
+API_MODEL_PATH=models/resnet50/best_model.pt \
 streamlit run streamlit_app.py
 ```
+
+`API_LABEL_MAP_PATH` normalmente no hace falta: se resuelve desde el directorio del
+checkpoint. Puede definirse explícitamente para modelos almacenados con otra estructura.
 
 `api/inference.py` acepta además:
 

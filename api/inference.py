@@ -5,7 +5,8 @@ need code changes once train.py + evaluate.py pick a winner:
 
     API_MODEL_NAME  - "resnet50" or "mobilenet_v3" (default: resnet50)
     API_MODEL_PATH  - path to the .pt checkpoint (default: models/<API_MODEL_NAME>/best_model.pt)
-    API_LABEL_MAP_PATH - matching class map (default: models/label_map.json)
+    API_LABEL_MAP_PATH - matching class map (default: label_map.json next to the checkpoint,
+                         with models/label_map.json as a legacy fallback)
 """
 import io
 import json
@@ -27,7 +28,13 @@ IMAGE_SIZE = 224
 
 MODEL_NAME = os.environ.get("API_MODEL_NAME", "resnet50")
 MODEL_PATH = Path(os.environ.get("API_MODEL_PATH", ROOT / "models" / MODEL_NAME / "best_model.pt"))
-LABEL_MAP_PATH = Path(os.environ.get("API_LABEL_MAP_PATH", ROOT / "models" / "label_map.json"))
+_checkpoint_label_map = MODEL_PATH.parent / "label_map.json"
+_default_label_map = (
+    _checkpoint_label_map
+    if _checkpoint_label_map.exists()
+    else ROOT / "models" / "label_map.json"
+)
+LABEL_MAP_PATH = Path(os.environ.get("API_LABEL_MAP_PATH", _default_label_map))
 
 # Softmax temperature for probability calibration (>1 softens overconfident logits;
 # fit on a held-out split, e.g. by minimizing NLL/ECE, then set via env var).
@@ -57,6 +64,12 @@ def load_model():
         )
     with open(LABEL_MAP_PATH, encoding="utf-8") as f:
         label_map = json.load(f)
+    expected_indices = set(range(len(label_map)))
+    if set(label_map.values()) != expected_indices:
+        raise RuntimeError(
+            f"{LABEL_MAP_PATH} must map classes to every index from 0 to "
+            f"{len(label_map) - 1}."
+        )
     _idx_to_class = {v: k for k, v in label_map.items()}
 
     if not MODEL_PATH.exists():
