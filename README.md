@@ -160,6 +160,33 @@ El evaluador considera `vl_black_rot` como positivo y, de forma predeterminada,
 `vl_downy_mildew` y `vl_powdery_mildew` como negativos. Informa sensibilidad,
 especificidad, F1, balanced accuracy y la matriz binaria completa.
 
+### Experimento binario balanceado
+
+El experimento definitivo para las fuentes actualmente compatibles reformula la
+tarea como `black_rot` frente a `not_black_rot`. Genera una línea base controlada,
+un entrenamiento híbrido con positivos y negativos naturales, y un test natural
+compartido:
+
+```bash
+python scripts/prepare_binary_experiment.py
+
+python scripts/train.py \
+  --model resnet50 --data-dir data/binary_controlled \
+  --label-map models/binary_label_map.json \
+  --run-name resnet50_binary_controlled \
+  --epochs 8 --finetune-epochs 15
+
+python scripts/train.py \
+  --model resnet50 --data-dir data/binary_hybrid \
+  --label-map models/binary_label_map.json \
+  --run-name resnet50_binary_hybrid \
+  --epochs 8 --finetune-epochs 15
+```
+
+Ambos modelos deben evaluarse primero sobre `data/binary_controlled` y luego
+sobre `data/binary_natural_test`. Para una comparación justa deben conservar los
+mismos hiperparámetros y pesos iniciales.
+
 Para servir un checkpoint alternativo después del entrenamiento:
 
 ```bash

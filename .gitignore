@@ -12,6 +12,9 @@ data/diagnosis_processed/
 data/controlled_processed/
 data/hybrid_comparable/
 data/natural_comparable_test/
+data/binary_controlled/
+data/binary_hybrid/
+data/binary_natural_test/
 evaluation_models/
 data/
 Grapes Disease Dataset/
