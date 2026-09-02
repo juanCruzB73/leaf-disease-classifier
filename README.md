@@ -30,11 +30,9 @@ Para tests de UI con Playwright (opcional, no hace falta para usar la app), agre
 `--dev` (`./setup.sh --dev`) o `-Dev` (`.\setup.ps1 -Dev`) — instala Playwright y
 descarga un Chromium headless.
 
-`10573036.zip` (dataset COCO original) y el `Grapes Disease Dataset/` externo no
-están en el repo (ver `.gitignore`, son pesados); hay que copiarlos a la raíz del
-proyecto antes de correr `scripts/prepare_data.py` / `scripts/prepare_diagnosis_data.py`.
-Si ya tenés `data/processed` y un checkpoint en `models/`, podés saltar directo a
-"Ejecutar la API" o a la sección de Streamlit.
+El experimento actual usa exclusivamente el dataset controlado de PlantVillage
+publicado en Kaggle. `scripts/prepare_controlled_data.py` lo descarga de forma
+automática; no combina sus imágenes con los datasets locales o COCO anteriores.
 
 ## Ejecutar la API
 
@@ -78,51 +76,38 @@ mostrará la predicción, su confianza y un gráfico con las nueve probabilidade
 
 ## Datos, entrenamiento y evaluación
 
-El dataset original está separado por clase en `data/processed/{train,val,test}`.
-Para volver a generarlo desde `data/raw`:
+Preparar el único dataset permitido para este experimento:
 
 ```bash
-python scripts/prepare_data.py
+python scripts/prepare_controlled_data.py
 ```
 
-Los siguientes comandos reproducen únicamente el experimento inicial y no deben
-usarse para sobrescribir el ResNet50 de diagnóstico actual:
+Esto ejecuta internamente:
 
-```bash
-python scripts/train.py --model resnet50 --run-name resnet50_legacy --epochs 5 --finetune-epochs 5
-python scripts/evaluate.py --model resnet50 --run-name resnet50_legacy
+```python
+kagglehub.dataset_download("zienabesam/grape-plant-from-plant-village-dataset")
 ```
 
-El mejor checkpoint se guarda en `models/<modelo>/best_model.pt` y las métricas de
-prueba en `models/<modelo>/test_metrics.json`.
-
-### Dataset de diagnóstico corregido
-
-El flujo corregido elimina `vines_leaf` y `vines_grape` (describen el órgano, no
-su estado sanitario), incorpora las hojas sanas y la mancha bacteriana del dataset
-adicional, y elimina duplicados antes de dividir:
-
-```bash
-python scripts/prepare_diagnosis_data.py
-```
-
-El ResNet50 predeterminado ya fue reentrenado con este dataset. Para reproducir el
-entrenamiento y sobrescribir sus artefactos:
+Luego elimina duplicados exactos y crea una división reproducible 80/10/10 en
+`data/controlled_processed/{train,val,test}`. Las únicas clases son hoja sana,
+podredumbre negra, esca (sarampión negro) y tizón foliar. Para entrenar y evaluar ResNet50, los
+valores predeterminados ya apuntan a este dataset y a su mapa de cuatro clases:
 
 ```bash
 python scripts/train.py \
   --model resnet50 \
-  --data-dir data/diagnosis_processed \
-  --label-map models/diagnosis_label_map.json \
   --run-name resnet50 \
   --epochs 8 --finetune-epochs 15
 
 python scripts/evaluate.py \
   --model resnet50 \
-  --data-dir data/diagnosis_processed \
-  --label-map models/diagnosis_label_map.json \
   --run-name resnet50
 ```
+
+El mejor checkpoint se guarda en `models/resnet50/best_model.pt`, su mapa de
+clases en el mismo directorio y las métricas en `models/resnet50/test_metrics.json`.
+Al usar `--run-name resnet50`, este entrenamiento reemplaza los artefactos que la
+API y Streamlit cargan por defecto.
 
 Para servir un checkpoint alternativo después del entrenamiento:
 

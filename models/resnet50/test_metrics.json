@@ -1,174 +1,64 @@
 {
   "model": "resnet50",
-  "accuracy": 0.8227611940298507,
-  "macro_f1": 0.785273153058165,
-  "weighted_f1": 0.8168739865912688,
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "weighted_f1": 1.0,
   "per_class": {
     "healthy_leaf": {
-      "precision": 0.9789473684210527,
+      "precision": 1.0,
       "recall": 1.0,
-      "f1-score": 0.9893617021276596,
-      "support": 93.0
+      "f1-score": 1.0,
+      "support": 42.0
     },
-    "vg_black_rot": {
-      "precision": 0.8531468531468531,
-      "recall": 0.7922077922077922,
-      "f1-score": 0.8215488215488216,
-      "support": 154.0
-    },
-    "vg_downy_mildew": {
-      "precision": 0.6857142857142857,
-      "recall": 0.41025641025641024,
-      "f1-score": 0.5133689839572193,
-      "support": 117.0
-    },
-    "vg_grey_mould": {
-      "precision": 0.5454545454545454,
-      "recall": 0.7272727272727273,
-      "f1-score": 0.6233766233766234,
-      "support": 33.0
-    },
-    "vg_powdery_mildew": {
-      "precision": 0.7015706806282722,
-      "recall": 0.8481012658227848,
-      "f1-score": 0.7679083094555874,
-      "support": 158.0
-    },
-    "vl_bacterial_spot": {
-      "precision": 0.9,
-      "recall": 0.9,
-      "f1-score": 0.9,
-      "support": 10.0
+    "vl_black_measles": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 138.0
     },
     "vl_black_rot": {
-      "precision": 0.9487179487179487,
-      "recall": 0.962,
-      "f1-score": 0.9553128103277061,
-      "support": 500.0
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 118.0
     },
-    "vl_downy_mildew": {
-      "precision": 0.7830188679245284,
-      "recall": 0.6125461254612546,
-      "f1-score": 0.6873706004140787,
-      "support": 271.0
-    },
-    "vl_powdery_mildew": {
-      "precision": 0.7321428571428571,
-      "recall": 0.9044117647058824,
-      "f1-score": 0.8092105263157895,
-      "support": 272.0
+    "vl_leaf_blight": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 108.0
     }
   },
   "confusion_matrix": [
     [
-      93,
-      0,
-      0,
-      0,
-      0,
-      0,
+      42,
       0,
       0,
       0
     ],
     [
       0,
-      122,
-      9,
-      6,
-      7,
-      0,
-      7,
-      1,
-      2
-    ],
-    [
-      0,
-      1,
-      48,
-      7,
-      45,
-      0,
-      0,
-      16,
-      0
-    ],
-    [
-      0,
-      5,
-      1,
-      24,
-      2,
-      0,
-      0,
-      1,
-      0
-    ],
-    [
-      0,
-      3,
-      3,
-      5,
-      134,
-      0,
-      1,
-      5,
-      7
-    ],
-    [
-      1,
-      0,
-      0,
-      0,
-      0,
-      9,
-      0,
+      138,
       0,
       0
     ],
     [
       0,
-      9,
-      4,
       0,
-      0,
-      0,
-      481,
-      5,
-      1
-    ],
-    [
-      1,
-      3,
-      3,
-      0,
-      1,
-      0,
-      17,
-      166,
-      80
+      118,
+      0
     ],
     [
       0,
       0,
-      2,
-      2,
-      2,
-      1,
-      1,
-      18,
-      246
+      0,
+      108
     ]
   ],
   "class_order": [
     "healthy_leaf",
-    "vg_black_rot",
-    "vg_downy_mildew",
-    "vg_grey_mould",
-    "vg_powdery_mildew",
-    "vl_bacterial_spot",
+    "vl_black_measles",
     "vl_black_rot",
-    "vl_downy_mildew",
-    "vl_powdery_mildew"
+    "vl_leaf_blight"
   ]
 }

@@ -76,10 +76,10 @@ def run_epoch(model, loader, criterion, optimizer, device, train: bool):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", choices=["resnet50", "mobilenet_v3"], required=True)
-    parser.add_argument("--data-dir", default=str(ROOT / "data" / "processed"))
+    parser.add_argument("--data-dir", default=str(ROOT / "data" / "controlled_processed"))
     parser.add_argument("--models-dir", default=str(ROOT / "models"))
     parser.add_argument("--label-map", default="",
-                        help="Class map JSON (default: <models-dir>/label_map.json).")
+                        help="Class map JSON (default: <models-dir>/controlled_label_map.json).")
     parser.add_argument("--run-name", default="",
                         help="Artifact subdirectory (default: the architecture name).")
     parser.add_argument("--no-pretrained", action="store_true",
@@ -100,7 +100,7 @@ def main():
 
     data_dir = Path(args.data_dir)
     models_dir = Path(args.models_dir)
-    label_map_path = Path(args.label_map) if args.label_map else models_dir / "label_map.json"
+    label_map_path = Path(args.label_map) if args.label_map else models_dir / "controlled_label_map.json"
     with open(label_map_path, encoding="utf-8") as f:
         label_map = json.load(f)
     num_classes = len(label_map)

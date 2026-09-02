@@ -9,11 +9,17 @@ venv/
 data/raw/
 data/processed/
 data/diagnosis_processed/
+data/controlled_processed/
+data/
 Grapes Disease Dataset/
+Niphad Grape Leaf Disease Dataset (NGLD)/
 
 # trained artifacts (checkpoints are large; label_map.json and metrics are kept)
 models/*.pt
 models/*.pth
+models/**/*.pt
+models/**/*.pth
+*.zip
 
 
 .pytest_cache/

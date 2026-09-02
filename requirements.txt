@@ -2,6 +2,7 @@
 pillow
 numpy
 scikit-learn
+kagglehub
 
 # training
 torch

@@ -17,6 +17,8 @@ CLASS_NAMES = {
     "vines_grape": "Racimo de vid",
     "vines_leaf": "Hoja de vid",
     "vl_black_rot": "Podredumbre negra en hoja",
+    "vl_black_measles": "Esca (sarampión negro) en hoja",
+    "vl_leaf_blight": "Tizón foliar en hoja",
     "vl_downy_mildew": "Mildiu en hoja",
     "vl_powdery_mildew": "Oídio en hoja",
 }
