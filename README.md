@@ -187,6 +187,28 @@ Ambos modelos deben evaluarse primero sobre `data/binary_controlled` y luego
 sobre `data/binary_natural_test`. Para una comparación justa deben conservar los
 mismos hiperparámetros y pesos iniciales.
 
+### Experimento multiclase PlantVillage + GVLiD
+
+GVLiD versión 5 aporta las mismas cuatro clases en imágenes completas de campo:
+hoja sana, podredumbre negra, esca y mancha foliar. El preparador elimina copias
+exactas antes de dividir GVLiD y conserva sin cambios los splits controlados:
+
+```bash
+python scripts/prepare_gvlid_hybrid_data.py
+
+python scripts/train.py \
+  --model resnet50 \
+  --data-dir data/gvlid_hybrid_processed \
+  --label-map models/gvlid_hybrid_label_map.json \
+  --run-name resnet50_gvlid_hybrid \
+  --epochs 8 --finetune-epochs 15 --seed 42
+```
+
+El modelo se evalúa sobre el mismo test PlantVillage mediante
+`data/gvlid_hybrid_processed` y sobre imágenes completas naturales mediante
+`data/gvlid_natural_eval`. La procedencia se registra en el manifiesto con DOI
+`10.17632/wkymf8bhcg.5` y licencia CC BY 4.0.
+
 Para servir un checkpoint alternativo después del entrenamiento:
 
 ```bash
