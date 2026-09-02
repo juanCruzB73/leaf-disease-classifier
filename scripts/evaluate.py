@@ -60,11 +60,13 @@ def main():
             all_labels.extend(labels.tolist())
 
     class_names = [idx_to_class[i] for i in range(num_classes)]
-    report = classification_report(all_labels, all_preds, target_names=class_names,
+    report = classification_report(all_labels, all_preds, labels=list(range(num_classes)),
+                                    target_names=class_names,
                                     output_dict=True, zero_division=0)
     cm = confusion_matrix(all_labels, all_preds, labels=list(range(num_classes)))
 
-    print(classification_report(all_labels, all_preds, target_names=class_names, zero_division=0))
+    print(classification_report(all_labels, all_preds, labels=list(range(num_classes)),
+                                target_names=class_names, zero_division=0))
     print("Confusion matrix (rows=true, cols=pred):")
     print(" " * 20 + " ".join(f"{n[:6]:>6s}" for n in class_names))
     for name, row in zip(class_names, cm):

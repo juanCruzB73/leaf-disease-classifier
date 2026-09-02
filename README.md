@@ -109,6 +109,38 @@ clases en el mismo directorio y las métricas en `models/resnet50/test_metrics.j
 Al usar `--run-name resnet50`, este entrenamiento reemplaza los artefactos que la
 API y Streamlit cargan por defecto.
 
+### Experimento híbrido directamente comparable
+
+La rama `hybrid-comparable` conserva exactamente las cuatro clases y los mismos
+splits de validación y prueba de PlantVillage. Solo agrega al entrenamiento
+imágenes naturales cuya etiqueta sea semánticamente equivalente. Con las fuentes
+locales actuales, la única equivalencia segura es `vl_black_rot`; mildiu, oídio y
+mancha bacteriana no se renombran como esca o mancha de Isariopsis.
+
+```bash
+python scripts/prepare_comparable_hybrid_data.py
+
+python scripts/train.py \
+  --model resnet50 \
+  --data-dir data/hybrid_comparable \
+  --label-map models/hybrid_comparable_label_map.json \
+  --run-name resnet50_hybrid_comparable \
+  --epochs 8 --finetune-epochs 15
+
+python scripts/evaluate.py \
+  --model resnet50 \
+  --data-dir data/hybrid_comparable \
+  --label-map models/hybrid_comparable_label_map.json \
+  --run-name resnet50_hybrid_comparable
+```
+
+Esa evaluación usa el mismo test controlado que la línea base. El preparador
+también crea `data/natural_comparable_test`, aislado del entrenamiento, para medir
+ambos checkpoints sobre imágenes naturales. Por ahora su cobertura es parcial y
+solo permite informar métricas naturales de podredumbre negra. Nuevas clases
+naturales verificadas pueden incorporarse repitiendo
+`--natural-class SOURCE=TARGET`.
+
 Para servir un checkpoint alternativo después del entrenamiento:
 
 ```bash

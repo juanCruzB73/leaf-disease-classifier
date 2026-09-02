@@ -10,6 +10,8 @@ data/raw/
 data/processed/
 data/diagnosis_processed/
 data/controlled_processed/
+data/hybrid_comparable/
+data/natural_comparable_test/
 data/
 Grapes Disease Dataset/
 Niphad Grape Leaf Disease Dataset (NGLD)/
