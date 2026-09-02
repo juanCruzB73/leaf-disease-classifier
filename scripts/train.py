@@ -8,11 +8,13 @@ Example:
 """
 import argparse
 import json
+import random
 import time
 from collections import Counter
 from pathlib import Path
 
 import torch
+import numpy as np
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import models
@@ -91,9 +93,17 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--finetune-lr", type=float, default=1e-4)
     parser.add_argument("--num-workers", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducible initialization and data loading.")
     parser.add_argument("--limit-batches", type=int, default=0,
                          help="If >0, cap batches/epoch (smoke test / quick iteration).")
     args = parser.parse_args()
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device: {device}")
@@ -107,8 +117,9 @@ def main():
 
     train_ds = make_dataset(data_dir, "train", label_map, args.image_size)
     val_ds = make_dataset(data_dir, "val", label_map, args.image_size)
+    train_generator = torch.Generator().manual_seed(args.seed)
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,
-                               num_workers=args.num_workers)
+                               num_workers=args.num_workers, generator=train_generator)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
                              num_workers=args.num_workers)
 

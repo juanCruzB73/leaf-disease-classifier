@@ -174,13 +174,13 @@ python scripts/train.py \
   --model resnet50 --data-dir data/binary_controlled \
   --label-map models/binary_label_map.json \
   --run-name resnet50_binary_controlled \
-  --epochs 8 --finetune-epochs 15
+  --epochs 8 --finetune-epochs 15 --seed 42
 
 python scripts/train.py \
   --model resnet50 --data-dir data/binary_hybrid \
   --label-map models/binary_label_map.json \
   --run-name resnet50_binary_hybrid \
-  --epochs 8 --finetune-epochs 15
+  --epochs 8 --finetune-epochs 15 --seed 42
 ```
 
 Ambos modelos deben evaluarse primero sobre `data/binary_controlled` y luego
