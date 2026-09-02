@@ -70,8 +70,9 @@ streamlit run streamlit_app.py --server.headless true
 (`--server.headless true` evita el prompt interactivo de "Welcome to Streamlit"
 la primera vez que se corre en una máquina nueva.)
 
-Abrí <http://localhost:8501>, seleccioná una imagen JPEG o PNG y la aplicación
-mostrará la predicción, su confianza y un gráfico con las nueve probabilidades.
+Abrí <http://localhost:8501>, seleccioná una imagen JPEG o PNG de una hoja y la
+aplicación mostrará la predicción, su confianza y un gráfico con las probabilidades
+por clase.
 
 ## Datos, entrenamiento y evaluación
 
@@ -94,9 +95,10 @@ prueba en `models/<modelo>/test_metrics.json`.
 
 ### Dataset de diagnóstico corregido
 
-El flujo corregido elimina `vines_leaf` y `vines_grape` (describen el órgano, no
-su estado sanitario), incorpora las hojas sanas y la mancha bacteriana del dataset
-adicional, y elimina duplicados antes de dividir:
+El dataset base ya excluye toda clase relacionada con el racimo/fruto (solo hojas);
+el flujo corregido además elimina `vines_leaf` (describe el órgano, no su estado
+sanitario), incorpora las hojas sanas y la mancha bacteriana del dataset adicional,
+y elimina duplicados antes de dividir:
 
 ```bash
 python scripts/prepare_diagnosis_data.py
@@ -138,5 +140,5 @@ streamlit run streamlit_app.py
 ## Endpoints
 
 - `GET /health`: estado del servicio.
-- `POST /predict`: acepta archivos JPEG o PNG y devuelve clase, confianza,
-  probabilidades para las nueve clases y modelo utilizado.
+- `POST /predict`: acepta archivos JPEG o PNG de hojas y devuelve clase, confianza,
+  probabilidades por clase y modelo utilizado.

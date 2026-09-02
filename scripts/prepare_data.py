@@ -5,7 +5,9 @@ grapevine diseases, not a folder-per-class classification dataset. This script:
 
   1. Extracts the nested zips into data/raw/ (idempotent).
   2. Reads annotations/train.json and annotations/validation.json.
-  3. Drops disease categories with too few annotated instances to train on reliably.
+  3. Drops categories that describe the grape bunch/fruit (FRUIT_CATEGORIES) and
+     disease categories with too few annotated instances to train on reliably —
+     this classifier only targets leaves.
   4. Crops each kept annotation's bounding box (with padding) out of its source image,
      resizes it, and writes it under data/processed/<split>/<class_name>/.
   5. train.json becomes the training pool. validation.json is split (grouped by image,
@@ -21,6 +23,18 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Categories that describe the grape bunch/fruit rather than the leaf. The
+# classifier only targets leaves, so these are dropped before the min-samples
+# filter, regardless of how many instances they have.
+FRUIT_CATEGORIES = {
+    "vg_black_rot",
+    "vg_downy_mildew",
+    "vg_grey_mould",
+    "vg_powdery_mildew",
+    "vines_grape",
+    "carie_bianca_grappolo",
+}
 
 
 def extract_if_needed(zip_path: Path, dest: Path):
@@ -59,6 +73,8 @@ def kept_categories(train, val, min_samples):
     val_counts = category_counts(val)
     kept, dropped = {}, {}
     for cid, name in cats.items():
+        if name in FRUIT_CATEGORIES:
+            continue
         total = train_counts.get(cid, 0) + val_counts.get(cid, 0)
         if total >= min_samples:
             kept[cid] = name

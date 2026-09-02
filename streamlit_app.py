@@ -9,13 +9,8 @@ from api.inference import load_model, predict
 
 CLASS_NAMES = {
     "healthy_leaf": "Hoja sana",
-    "vl_bacterial_spot": "Mancha bacteriana en hoja",
-    "vg_black_rot": "Podredumbre negra en racimo",
-    "vg_downy_mildew": "Mildiu en racimo",
-    "vg_grey_mould": "Moho gris en racimo",
-    "vg_powdery_mildew": "Oídio en racimo",
-    "vines_grape": "Racimo de vid",
     "vines_leaf": "Hoja de vid",
+    "vl_bacterial_spot": "Mancha bacteriana en hoja",
     "vl_black_rot": "Podredumbre negra en hoja",
     "vl_downy_mildew": "Mildiu en hoja",
     "vl_powdery_mildew": "Oídio en hoja",
@@ -30,7 +25,7 @@ def initialize_model():
 st.set_page_config(page_title="Clasificador de enfermedades de vid", page_icon="🍇")
 st.title("Clasificador de enfermedades de vid")
 st.write(
-    "Subí una fotografía de una hoja o un racimo para estimar la clase y consultar "
+    "Subí una fotografía de una hoja para estimar la clase y consultar "
     "las probabilidades del modelo."
 )
 
@@ -75,11 +70,6 @@ else:
             st.success(CLASS_NAMES.get(predicted_class, predicted_class))
         st.metric("Confianza", f"{confidence:.1%}")
         st.caption(f"Modelo: {result['modelo']}")
-        if "healthy_leaf" in result["probabilidades"] and "healthy_grape" not in result["probabilidades"]:
-            st.caption(
-                "El modelo reconoce hojas sanas, pero todavía no dispone de una clase "
-                "de racimo sano."
-            )
 
     probabilities = pd.DataFrame(
         {
