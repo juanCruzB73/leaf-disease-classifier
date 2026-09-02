@@ -141,6 +141,25 @@ solo permite informar métricas naturales de podredumbre negra. Nuevas clases
 naturales verificadas pueden incorporarse repitiendo
 `--natural-class SOURCE=TARGET`.
 
+Para detectar si el modelo aprendió el atajo `imagen natural = black_rot`, debe
+evaluarse también con enfermedades foliares naturales negativas:
+
+```bash
+python scripts/evaluate_black_rot_binary.py \
+  --checkpoint models/resnet50/best_model.pt \
+  --label-map models/resnet50/label_map.json \
+  --output evaluation_models/controlled_natural/binary_metrics.json
+
+python scripts/evaluate_black_rot_binary.py \
+  --checkpoint hybrid_resultados/models/resnet50_hybrid_comparable/best_model.pt \
+  --label-map hybrid_resultados/models/resnet50_hybrid_comparable/label_map.json \
+  --output evaluation_models/hybrid_natural/binary_metrics.json
+```
+
+El evaluador considera `vl_black_rot` como positivo y, de forma predeterminada,
+`vl_downy_mildew` y `vl_powdery_mildew` como negativos. Informa sensibilidad,
+especificidad, F1, balanced accuracy y la matriz binaria completa.
+
 Para servir un checkpoint alternativo después del entrenamiento:
 
 ```bash
