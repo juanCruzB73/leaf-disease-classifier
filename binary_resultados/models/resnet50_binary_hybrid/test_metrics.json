@@ -1,0 +1,34 @@
+{
+  "model": "resnet50",
+  "accuracy": 0.9790286975717439,
+  "macro_f1": 0.9787541022454201,
+  "weighted_f1": 0.9790047038053662,
+  "per_class": {
+    "not_black_rot": {
+      "precision": 0.9874055415617129,
+      "recall": 0.9655172413793104,
+      "f1-score": 0.9763387297633873,
+      "support": 406.0
+    },
+    "black_rot": {
+      "precision": 0.9724950884086444,
+      "recall": 0.99,
+      "f1-score": 0.981169474727453,
+      "support": 500.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      392,
+      14
+    ],
+    [
+      5,
+      495
+    ]
+  ],
+  "class_order": [
+    "not_black_rot",
+    "black_rot"
+  ]
+}

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Informe del experimento binario de generalización</title>
+  <style>
+    @page { size: A4; margin: 18mm 17mm 18mm 17mm; }
+    body { font-family: "Liberation Sans", Arial, sans-serif; color: #20252b; line-height: 1.42; font-size: 10.5pt; }
+    h1 { color: #173f35; font-size: 24pt; margin: 0 0 4mm; }
+    h2 { color: #215f50; font-size: 16pt; margin-top: 8mm; border-bottom: 1px solid #b8cbc5; padding-bottom: 1.5mm; }
+    h3 { color: #2c6659; font-size: 12pt; margin-top: 5mm; }
+    p { margin: 2.2mm 0; text-align: justify; }
+    .subtitle { color: #52615d; font-size: 13pt; margin-bottom: 2mm; }
+    .meta { color: #68736f; font-size: 9.5pt; margin-bottom: 10mm; }
+    .summary { background: #edf5f2; border-left: 4px solid #2d806b; padding: 4mm 5mm; margin: 5mm 0; }
+    .warning { background: #fff6df; border-left: 4px solid #d69b25; padding: 3mm 5mm; margin: 4mm 0; }
+    table { width: 100%; border-collapse: collapse; margin: 4mm 0 6mm; font-size: 9.3pt; page-break-inside: avoid; }
+    th { background: #276b5b; color: white; padding: 2.2mm; text-align: center; }
+    td { border: 1px solid #ccd6d2; padding: 2mm; text-align: center; }
+    td:first-child { text-align: left; }
+    tr:nth-child(even) td { background: #f4f7f6; }
+    .good { color: #126b42; font-weight: bold; }
+    .bad { color: #a22b2b; font-weight: bold; }
+    .figures { display: table; width: 100%; table-layout: fixed; margin: 4mm 0; page-break-inside: avoid; }
+    .figure { display: table-cell; padding: 2mm; text-align: center; vertical-align: top; }
+    .figure img { max-width: 100%; height: 48mm; object-fit: contain; border: 1px solid #c9d0cd; }
+    .caption { font-size: 8.5pt; color: #4d5955; text-align: center; margin-top: 1.5mm; }
+    .matrix { font-family: "Liberation Mono", monospace; white-space: pre; background: #f2f4f3; padding: 3mm; display: inline-block; }
+    ul { margin: 2mm 0 3mm 6mm; }
+    li { margin-bottom: 1.2mm; }
+    .page-break { page-break-before: always; }
+    .small { font-size: 8.5pt; color: #59645f; }
+  </style>
+</head>
+<body>
+  <h1>Informe del experimento binario de generalización</h1>
+  <div class="subtitle">Detección de podredumbre negra en hojas de vid mediante ResNet50</div>
+  <div class="meta">Grupo 05 · Berrios Juan Cruz, Puerta Candela y Emmanuel Orozco · 2 de septiembre de 2026</div>
+
+  <div class="summary">
+    <strong>Resultado principal.</strong> El modelo entrenado solamente con PlantVillage alcanzó 100&nbsp;% de accuracy
+    en imágenes controladas, pero descendió a 44,70&nbsp;% en imágenes naturales y detectó apenas 1 de 500 casos
+    naturales de podredumbre negra. El entrenamiento híbrido balanceado mantuvo 100&nbsp;% en el test controlado y
+    alcanzó 97,90&nbsp;% en el test natural, con 99,00&nbsp;% de sensibilidad y 96,55&nbsp;% de especificidad. Los resultados
+    aportan evidencia preliminar de una reducción sustancial del <em>domain gap</em> para esta tarea binaria.
+  </div>
+
+  <h2>1. Objetivo</h2>
+  <p>
+    El experimento estudia si incorporar imágenes de vid obtenidas en condiciones visuales naturales mejora la
+    generalización de una red neuronal convolucional entrenada inicialmente con PlantVillage. Debido a que la
+    única etiqueta con equivalencia segura entre las fuentes disponibles es la podredumbre negra, la comparación
+    se formuló como una tarea binaria: <strong>black_rot</strong> frente a <strong>not_black_rot</strong>.
+  </p>
+  <p>
+    Se compararon dos modelos ResNet50 bajo el mismo protocolo: una línea base entrenada exclusivamente con
+    imágenes controladas y un modelo híbrido entrenado con imágenes controladas más ejemplos naturales positivos
+    y negativos. Ambos modelos fueron evaluados sobre exactamente los mismos conjuntos de prueba.
+  </p>
+
+  <h2>2. Fuentes de datos y construcción de clases</h2>
+  <h3>2.1 Dominio controlado</h3>
+  <p>
+    Se utilizó el dataset público <code>zienabesam/grape-plant-from-plant-village-dataset</code>, compuesto por
+    4.062 imágenes de hojas completas fotografiadas sobre fondos homogéneos. Sus clases originales y su
+    normalización binaria fueron:
+  </p>
+  <table>
+    <tr><th>Clase PlantVillage</th><th>Imágenes</th><th>Clase binaria</th></tr>
+    <tr><td>Grape___Black_rot</td><td>1.180</td><td>black_rot</td></tr>
+    <tr><td>Grape___healthy</td><td>423</td><td>not_black_rot</td></tr>
+    <tr><td>Grape___Esca_(Black_Measles)</td><td>1.383</td><td>not_black_rot</td></tr>
+    <tr><td>Grape___Leaf_blight_(Isariopsis_Leaf_Spot)</td><td>1.076</td><td>not_black_rot</td></tr>
+  </table>
+  <p>La partición reproducible fue 80/10/10: 3.250 imágenes de entrenamiento, 406 de validación y 406 de prueba.</p>
+
+  <div class="figures">
+    <div class="figure">
+      <img src="informe_assets/plantvillage_black_rot.jpg" alt="PlantVillage black rot">
+      <div class="caption">Figura 1. Muestra de entrenamiento controlada: podredumbre negra.</div>
+    </div>
+    <div class="figure">
+      <img src="informe_assets/plantvillage_healthy.jpg" alt="PlantVillage healthy">
+      <div class="caption">Figura 2. Muestra de entrenamiento controlada negativa: hoja sana.</div>
+    </div>
+  </div>
+
+  <h3>2.2 Dominio natural</h3>
+  <p>
+    Las imágenes naturales proceden del dataset LDD y fueron convertidas desde anotaciones de detección a recortes
+    de clasificación de 224×224 píxeles. La división se realizó agrupando por imagen de origen para impedir que
+    recortes de una misma fotografía aparecieran simultáneamente en entrenamiento y prueba.
+  </p>
+  <table>
+    <tr><th>Clase natural</th><th>Entrenamiento</th><th>Prueba</th><th>Clase binaria</th></tr>
+    <tr><td>vl_black_rot</td><td>4.368</td><td>500</td><td>black_rot</td></tr>
+    <tr><td>vl_downy_mildew</td><td>2.092</td><td>174</td><td>not_black_rot</td></tr>
+    <tr><td>vl_powdery_mildew</td><td>1.779</td><td>232</td><td>not_black_rot</td></tr>
+  </table>
+
+  <div class="figures">
+    <div class="figure">
+      <img src="informe_assets/natural_black_rot.jpg" alt="Natural black rot">
+      <div class="caption">Figura 3. Muestra de entrenamiento natural positiva: podredumbre negra.</div>
+    </div>
+    <div class="figure">
+      <img src="informe_assets/natural_downy_mildew.jpg" alt="Natural downy mildew">
+      <div class="caption">Figura 4. Muestra de entrenamiento natural negativa: mildiu.</div>
+    </div>
+    <div class="figure">
+      <img src="informe_assets/natural_powdery_mildew.jpg" alt="Natural powdery mildew">
+      <div class="caption">Figura 5. Muestra de entrenamiento natural negativa: oídio.</div>
+    </div>
+  </div>
+  <p class="small">
+    Las figuras son ejemplos pertenecientes a los conjuntos de entrenamiento utilizados. Las imágenes naturales son recortes de
+    regiones anotadas; su variación de escala, nitidez, iluminación y encuadre contrasta con las hojas completas y
+    los fondos homogéneos de PlantVillage.
+  </p>
+
+  <h2>3. Diseño experimental</h2>
+  <table>
+    <tr><th>Componente</th><th>Línea base controlada</th><th>Híbrido balanceado</th></tr>
+    <tr><td>Entrenamiento controlado</td><td>Sí</td><td>Sí</td></tr>
+    <tr><td>Positivos naturales</td><td>No</td><td>Sí</td></tr>
+    <tr><td>Negativos naturales</td><td>No</td><td>Sí</td></tr>
+    <tr><td>Validación controlada compartida</td><td>Sí</td><td>Sí</td></tr>
+    <tr><td>Test controlado compartido</td><td>406 imágenes</td><td>Las mismas 406 imágenes</td></tr>
+    <tr><td>Test natural compartido</td><td>906 imágenes</td><td>Las mismas 906 imágenes</td></tr>
+  </table>
+  <p>
+    Se empleó ResNet50 con pesos iniciales de ImageNet. El entrenamiento se dividió en 8 épocas con el backbone
+    congelado y 15 épocas de ajuste fino completo. Se utilizó Adam, ponderación inversa de clases, entrada de
+    224×224 píxeles y selección del mejor checkpoint mediante Macro F1 de validación. Ambos entrenamientos usaron
+    la semilla 42 para reproducir la inicialización y el orden de carga.
+  </p>
+
+  <h2>4. Resultados</h2>
+  <h3>4.1 Comparación global</h3>
+  <table>
+    <tr><th>Modelo</th><th>Test</th><th>Accuracy</th><th>Macro F1</th><th>F1 black_rot</th></tr>
+    <tr><td>Solo PlantVillage</td><td>Controlado</td><td>100,00 %</td><td>100,00 %</td><td>100,00 %</td></tr>
+    <tr><td>Híbrido balanceado</td><td>Controlado</td><td>100,00 %</td><td>100,00 %</td><td>100,00 %</td></tr>
+    <tr><td>Solo PlantVillage</td><td>Natural</td><td class="bad">44,70 %</td><td class="bad">31,06 %</td><td class="bad">0,40 %</td></tr>
+    <tr><td>Híbrido balanceado</td><td>Natural</td><td class="good">97,90 %</td><td class="good">97,88 %</td><td class="good">98,12 %</td></tr>
+  </table>
+
+  <h3>4.2 Evaluación natural detallada</h3>
+  <table>
+    <tr><th>Métrica</th><th>Solo PlantVillage</th><th>Híbrido balanceado</th></tr>
+    <tr><td>Sensibilidad</td><td>0,20 %</td><td>99,00 %</td></tr>
+    <tr><td>Especificidad</td><td>99,51 %</td><td>96,55 %</td></tr>
+    <tr><td>Precision</td><td>33,33 %</td><td>97,25 %</td></tr>
+    <tr><td>F1 black_rot</td><td>0,40 %</td><td>98,12 %</td></tr>
+    <tr><td>Balanced accuracy</td><td>49,75 %</td><td>97,78 %</td></tr>
+    <tr><td>Falsos positivos</td><td>2</td><td>14</td></tr>
+    <tr><td>Falsos negativos</td><td>499</td><td>5</td></tr>
+  </table>
+
+  <div class="figures">
+    <div class="figure">
+      <strong>Matriz — solo PlantVillage</strong><br>
+      <div class="matrix">TN=404   FP=2
+FN=499    TP=1</div>
+    </div>
+    <div class="figure">
+      <strong>Matriz — híbrido balanceado</strong><br>
+      <div class="matrix">TN=392  FP=14
+FN=5    TP=495</div>
+    </div>
+  </div>
+
+  <h2>5. Interpretación</h2>
+  <p>
+    La línea base perdió 55,30 puntos porcentuales de accuracy al cambiar del dominio controlado al natural. Su
+    especificidad permaneció alta, pero su sensibilidad fue prácticamente nula: reconoció solo 1 de 500 casos
+    naturales de podredumbre negra. Este comportamiento evidencia una brecha de dominio severa.
+  </p>
+  <p>
+    El modelo híbrido balanceado conservó el rendimiento perfecto sobre el test controlado y alcanzó 97,90&nbsp;%
+    sobre el test natural. Identificó correctamente 495 de 500 positivos y 392 de 406 negativos. La diferencia de
+    accuracy entre dominios se redujo a 2,10 puntos porcentuales.
+  </p>
+  <p>
+    Un primer híbrido que incorporaba únicamente positivos naturales había alcanzado 100&nbsp;% de sensibilidad pero
+    solo 13,55&nbsp;% de especificidad, indicando el atajo <em>imagen natural = black_rot</em>. La incorporación de
+    negativos naturales elevó la especificidad a 96,55&nbsp;% sin degradar sustancialmente la sensibilidad, que se
+    mantuvo en 99,00&nbsp;%. Esto muestra la importancia del balance por clase y por dominio.
+  </p>
+
+  <h2>6. Limitaciones y validez</h2>
+  <div class="warning">
+    Los resultados corresponden a una única ejecución con semilla 42 y a una tarea binaria específica. Deben
+    interpretarse como evidencia preliminar, no como validación definitiva para todas las enfermedades de la vid.
+  </div>
+  <ul>
+    <li>La comparación completa se limita a podredumbre negra frente a dos enfermedades naturales negativas.</li>
+    <li>El test natural no contiene hojas sanas naturales.</li>
+    <li>Los resultados todavía no se repitieron con múltiples semillas.</li>
+    <li>PlantVillage puede contener sesgos visuales asociados al fondo y a su protocolo de adquisición.</li>
+    <li>La clasificación binaria no reemplaza la evaluación multiclase propuesta originalmente.</li>
+  </ul>
+
+  <h2>7. Conclusión y próximos pasos</h2>
+  <p>
+    Bajo el protocolo evaluado, el entrenamiento híbrido balanceado redujo considerablemente el <em>domain gap</em>
+    para la detección binaria de podredumbre negra, sin degradar el rendimiento sobre imágenes controladas. El
+    resultado respalda la hipótesis de que la diversidad visual natural debe incorporarse de forma balanceada,
+    incluyendo tanto ejemplos positivos como negativos.
+  </p>
+  <p>Para consolidar la evidencia se recomienda:</p>
+  <ol>
+    <li>repetir ambos entrenamientos con semillas 42, 123 y 2026;</li>
+    <li>informar promedio, desviación estándar e intervalos de confianza;</li>
+    <li>incorporar hojas sanas naturales al conjunto negativo;</li>
+    <li>obtener imágenes naturales equivalentes para esca y mancha foliar de Isariopsis;</li>
+    <li>extender posteriormente la comparación a una tarea multiclase con etiquetas compatibles.</li>
+  </ol>
+
+  <p class="small">
+    Archivos de evidencia: <code>controlled_test_metrics.json</code>, <code>natural_test_metrics.json</code>,
+    <code>train_history.json</code> y <code>label_map.json</code> de cada ejecución. Los checkpoints no son necesarios
+    para auditar las métricas y deben almacenarse fuera del repositorio Git por su tamaño.
+  </p>
+
+  <h2>8. Fuentes</h2>
+  <ul class="small">
+    <li>Dataset controlado: <em>Grape Plant From Plant Village Dataset</em>, identificador Kaggle
+      <code>zienabesam/grape-plant-from-plant-village-dataset</code>.</li>
+    <li>Dataset natural: Rossi, L., Valenti, M., Legler, S. E. y Prati, A. (2022),
+      <em>LDD: A Dataset for Grape Diseases Object Detection and Instance Segmentation</em>.</li>
+    <li>Las imágenes reproducidas en este informe son muestras de entrenamiento de dichas fuentes. Antes de
+      publicarlas en la versión final del artículo debe verificarse la licencia y atribución exigida por cada dataset.</li>
+  </ul>
+</body>
+</html>

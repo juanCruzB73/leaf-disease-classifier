@@ -1,0 +1,64 @@
+{
+  "model": "resnet50",
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "weighted_f1": 1.0,
+  "per_class": {
+    "healthy_leaf": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 42.0
+    },
+    "vl_black_measles": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 138.0
+    },
+    "vl_black_rot": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 118.0
+    },
+    "vl_leaf_blight": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 108.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      42,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      138,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      118,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      108
+    ]
+  ],
+  "class_order": [
+    "healthy_leaf",
+    "vl_black_measles",
+    "vl_black_rot",
+    "vl_leaf_blight"
+  ]
+}
