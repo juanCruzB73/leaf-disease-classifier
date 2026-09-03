@@ -77,11 +77,6 @@ else:
             st.success(CLASS_NAMES.get(predicted_class, predicted_class))
         st.metric("Confianza", f"{confidence:.1%}")
         st.caption(f"Modelo: {result['modelo']}")
-        if "healthy_leaf" in result["probabilidades"] and "healthy_grape" not in result["probabilidades"]:
-            st.caption(
-                "El modelo reconoce hojas sanas, pero todavía no dispone de una clase "
-                "de racimo sano."
-            )
 
     probabilities = pd.DataFrame(
         {

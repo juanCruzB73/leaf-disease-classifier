@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Informe del experimento multiclase con dataset híbrido</title>
+  <style>
+    @page { size: A4; margin: 17mm; }
+    body { font-family: "Liberation Sans", Arial, sans-serif; color: #20252b; line-height: 1.42; font-size: 10.5pt; }
+    h1 { color: #173f35; font-size: 23pt; margin: 0 0 3mm; }
+    h2 { color: #215f50; font-size: 15.5pt; margin-top: 8mm; border-bottom: 1px solid #b8cbc5; padding-bottom: 1.5mm; }
+    h3 { color: #2c6659; font-size: 12pt; margin-top: 5mm; }
+    p { margin: 2.2mm 0; text-align: justify; }
+    ul, ol { margin: 2mm 0 3mm 7mm; }
+    li { margin-bottom: 1.2mm; }
+    table { width: 100%; border-collapse: collapse; margin: 4mm 0 6mm; font-size: 9pt; page-break-inside: avoid; }
+    th { background: #276b5b; color: white; padding: 2.2mm; text-align: center; }
+    td { border: 1px solid #ccd6d2; padding: 2mm; text-align: center; }
+    td:first-child { text-align: left; }
+    tr:nth-child(even) td { background: #f4f7f6; }
+    .subtitle { color: #52615d; font-size: 13pt; margin-bottom: 2mm; }
+    .meta { color: #68736f; font-size: 9.5pt; margin-bottom: 9mm; }
+    .summary { background: #edf5f2; border-left: 4px solid #2d806b; padding: 4mm 5mm; margin: 5mm 0; }
+    .warning { background: #fff6df; border-left: 4px solid #d69b25; padding: 3mm 5mm; margin: 4mm 0; }
+    .good { color: #126b42; font-weight: bold; }
+    .bad { color: #a22b2b; font-weight: bold; }
+    .figure { margin: 5mm auto; text-align: center; page-break-inside: avoid; }
+    .figure img { width: 150mm; height: auto; object-fit: contain; }
+    .figure.wide img { width: 175mm; height: auto; }
+    .caption { font-size: 8.5pt; color: #4d5955; text-align: justify; margin: 1.5mm auto 0; max-width: 95%; }
+    .page-break { page-break-before: always; }
+    .small { font-size: 8.5pt; color: #59645f; }
+    code { font-family: "Liberation Mono", monospace; font-size: 9pt; }
+  </style>
+</head>
+<body>
+  <h1>Informe del experimento multiclase con dataset híbrido</h1>
+  <div class="subtitle">Generalización de ResNet50 desde PlantVillage hacia imágenes naturales de hojas de vid</div>
+  <div class="meta">Grupo 05 · Berrios Juan Cruz, Puerta Candela y Emmanuel Orozco · 3 de septiembre de 2026</div>
+
+  <div class="summary">
+    <strong>Resultado principal.</strong> Una ResNet50 entrenada exclusivamente con PlantVillage obtuvo
+    accuracy 20,17&nbsp;% y macro F1 20,50&nbsp;% al evaluarse sobre 362 imágenes naturales. Con la misma
+    arquitectura, el entrenamiento híbrido elevó esos valores a 90,61&nbsp;% y 84,41&nbsp;%, respectivamente,
+    sin degradar el resultado del test controlado. La mejora aporta evidencia experimental de una reducción
+    sustancial de la brecha de dominio.
+  </div>
+
+  <h2>1. Objetivo</h2>
+  <p>
+    El objetivo fue comprobar si la incorporación de fotografías naturales al entrenamiento mejora la capacidad
+    de una red neuronal convolucional para clasificar enfermedades foliares de la vid fuera de las condiciones
+    controladas de PlantVillage. Se compararon dos modelos ResNet50: una línea base entrenada exclusivamente con
+    PlantVillage y un modelo entrenado con un conjunto híbrido. Ambos reconocen las mismas cuatro categorías y
+    fueron evaluados sobre exactamente los mismos conjuntos de prueba.
+  </p>
+
+  <h2>2. Fuentes y construcción de los datos</h2>
+  <h3>2.1 Clases compatibles</h3>
+  <p>
+    El dominio controlado se obtuvo de PlantVillage. Para el dominio natural se utilizó GVLiD: <em>GrapeVine
+    Leaf identification of the Diseases</em>, versión 5. Se conservaron exclusivamente las categorías con una
+    correspondencia semántica entre ambas fuentes.
+  </p>
+  <table>
+    <tr><th>Etiqueta natural GVLiD</th><th>Etiqueta normalizada</th><th>Nombre utilizado</th></tr>
+    <tr><td>healthy</td><td>healthy_leaf</td><td>Hoja sana</td></tr>
+    <tr><td>esca</td><td>vl_black_measles</td><td>Esca o sarampión negro</td></tr>
+    <tr><td>Black rot</td><td>vl_black_rot</td><td>Podredumbre negra</td></tr>
+    <tr><td>leaf blight</td><td>vl_leaf_blight</td><td>Tizón foliar</td></tr>
+  </table>
+
+  <h3>2.2 Depuración y particiones</h3>
+  <p>
+    Antes de dividir GVLiD se calcularon hashes SHA-256. Se eliminaron 1.066 duplicados exactos y dos contenidos
+    que aparecían con etiquetas contradictorias. Quedaron 2.407 fotografías naturales utilizables. La división
+    por clase se realizó de forma determinista en 70&nbsp;% para entrenamiento, 15&nbsp;% para validación y
+    15&nbsp;% para prueba, con semilla 42. El procedimiento evita que una copia exacta aparezca simultáneamente
+    en entrenamiento y prueba.
+  </p>
+  <table>
+    <tr><th>Clase</th><th>Originales</th><th>Únicas utilizables</th><th>Train natural</th><th>Val natural</th><th>Test natural</th></tr>
+    <tr><td>Hoja sana</td><td>1.109</td><td>1.093</td><td>765</td><td>164</td><td>164</td></tr>
+    <tr><td>Esca</td><td>888</td><td>886</td><td>620</td><td>133</td><td>133</td></tr>
+    <tr><td>Podredumbre negra</td><td>808</td><td>97</td><td>67</td><td>15</td><td>15</td></tr>
+    <tr><td>Tizón foliar</td><td>672</td><td>331</td><td>231</td><td>50</td><td>50</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>3.477</strong></td><td><strong>2.407</strong></td><td><strong>1.683</strong></td><td><strong>362</strong></td><td><strong>362</strong></td></tr>
+  </table>
+  <p>
+    El conjunto híbrido de entrenamiento contiene las 3.250 imágenes controladas de PlantVillage y las 1.683
+    naturales, para un total de 4.933. La validación y el test controlados contienen 406 imágenes cada uno y se
+    mantuvieron idénticos a los de la línea base. El test natural independiente contiene 362 fotografías y no se
+    empleó durante el entrenamiento ni para seleccionar el checkpoint.
+  </p>
+
+  <div class="page-break"></div>
+  <div class="figure">
+    <img src="informe_assets/gvlid_controlled_natural_examples_report.png" alt="Ejemplos controlados y naturales por clase">
+    <div class="caption">
+      <strong>Figura 1.</strong> Ejemplos de entrenamiento para las cuatro clases. A la izquierda, imágenes de
+      PlantVillage en ambiente controlado; a la derecha, fotografías naturales de GVLiD. Estas muestras no
+      pertenecen a los conjuntos de prueba.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>3. Configuración experimental</h2>
+  <p>
+    Se utilizó ResNet50 inicializada con pesos ImageNet1K V2, reemplazando su capa final por cuatro salidas. Las
+    imágenes se procesaron a 224 × 224 píxeles y se normalizaron con los parámetros de ImageNet. El aumento de
+    datos se aplicó exclusivamente durante el entrenamiento: recorte aleatorio con escala 0,8–1,0, volteo
+    horizontal, rotación de hasta 15 grados y variaciones moderadas de brillo, contraste y saturación de 0,2.
+    En este experimento no se aplicó CLAHE.
+  </p>
+  <p>
+    El entrenamiento tuvo ocho épocas iniciales con el backbone congelado y tasa de aprendizaje 0,001, seguidas
+    por quince épocas de ajuste fino completo con tasa 0,0001. Se utilizó Adam, tamaño de lote 32, entropía cruzada
+    ponderada por frecuencia inversa y semilla 42. El checkpoint se seleccionó por macro F1 de validación
+    controlada. Accuracy, precision, recall, F1 por clase, macro F1, weighted F1 y matriz de confusión se calcularon
+    sin modificar los modelos después del entrenamiento.
+  </p>
+
+  <h2>4. Resultados</h2>
+  <h3>4.1 Comparación global</h3>
+  <table>
+    <tr><th>Modelo</th><th>Test</th><th>Accuracy</th><th>Macro F1</th><th>Weighted F1</th></tr>
+    <tr><td>Solo PlantVillage</td><td>Controlado (n=406)</td><td>1,0000</td><td>1,0000</td><td>1,0000</td></tr>
+    <tr><td>Híbrido</td><td>Controlado (n=406)</td><td>1,0000</td><td>1,0000</td><td>1,0000</td></tr>
+    <tr><td>Solo PlantVillage</td><td>Natural (n=362)</td><td class="bad">0,2017</td><td class="bad">0,2050</td><td class="bad">0,2219</td></tr>
+    <tr><td>Híbrido</td><td>Natural (n=362)</td><td class="good">0,9061</td><td class="good">0,8441</td><td class="good">0,9002</td></tr>
+  </table>
+  <p>
+    La incorporación de imágenes naturales produjo mejoras absolutas de 0,7044 en accuracy y 0,6390 en macro F1.
+    La línea base acertó 73 de 362 imágenes naturales, mientras que el modelo híbrido acertó 328, una diferencia
+    de 255 clasificaciones correctas. El descenso entre el test controlado y el natural fue de 79,83 puntos
+    porcentuales para PlantVillage y de 9,39 puntos para el híbrido.
+  </p>
+
+  <h3>4.2 Desempeño por clase en el dominio natural</h3>
+  <table>
+    <tr><th>Clase</th><th>Modelo</th><th>Precision</th><th>Recall</th><th>F1</th><th>n</th></tr>
+    <tr><td>Hoja sana</td><td>PlantVillage</td><td>1,0000</td><td>0,0122</td><td>0,0241</td><td>164</td></tr>
+    <tr><td>Hoja sana</td><td>Híbrido</td><td>0,9820</td><td>1,0000</td><td class="good">0,9909</td><td>164</td></tr>
+    <tr><td>Esca</td><td>PlantVillage</td><td>0,7000</td><td>0,3684</td><td>0,4828</td><td>133</td></tr>
+    <tr><td>Esca</td><td>Híbrido</td><td>0,8503</td><td>0,9398</td><td class="good">0,8929</td><td>133</td></tr>
+    <tr><td>Podredumbre negra</td><td>PlantVillage</td><td>0,0528</td><td>0,9333</td><td>0,1000</td><td>15</td></tr>
+    <tr><td>Podredumbre negra</td><td>Híbrido</td><td>0,9231</td><td>0,8000</td><td class="good">0,8571</td><td>15</td></tr>
+    <tr><td>Tizón foliar</td><td>PlantVillage</td><td>0,3200</td><td>0,1600</td><td>0,2133</td><td>50</td></tr>
+    <tr><td>Tizón foliar</td><td>Híbrido</td><td>0,7714</td><td>0,5400</td><td class="good">0,6353</td><td>50</td></tr>
+  </table>
+
+  <div class="figure wide">
+    <img src="informe_assets/comparacion_f1_natural_report.png" alt="Comparación de F1 por clase">
+    <div class="caption"><strong>Figura 2.</strong> F1 por clase de ambos modelos sobre el mismo test natural.</div>
+  </div>
+
+  <div class="page-break"></div>
+  <div class="figure wide">
+    <img src="informe_assets/matrices_confusion_natural_report.png" alt="Matrices de confusión naturales">
+    <div class="caption">
+      <strong>Figura 3.</strong> Matrices de confusión sobre el test natural. Las filas representan la clase real y
+      las columnas la clase predicha; se informa cantidad y porcentaje dentro de cada clase real.
+    </div>
+  </div>
+
+  <h2>5. Análisis y discusión</h2>
+  <p>
+    La línea base asignó la etiqueta podredumbre negra a 138 de 164 hojas sanas, 82 de 133 casos de esca y 31 de
+    50 casos de tizón foliar. Por ello, su recall de podredumbre negra fue alto (0,9333), pero su precision fue de
+    solo 0,0528. Este patrón muestra que el modelo no reconocía de forma confiable la enfermedad, sino que
+    sobreutilizaba esa categoría frente al cambio visual del dominio.
+  </p>
+  <p>
+    El modelo híbrido reconoció correctamente todas las hojas sanas, 125 de 133 casos de esca y 12 de 15 casos de
+    podredumbre negra. Su principal error residual fue la confusión entre tizón foliar y esca: 22 de los 50 casos
+    de tizón se asignaron a esca. Aunque el F1 del tizón mejoró de 0,2133 a 0,6353, esta clase requiere mayor
+    diversidad y una revisión de la consistencia de sus etiquetas.
+  </p>
+  <p>
+    Los resultados respaldan la hipótesis del artículo: el desempeño perfecto dentro de PlantVillage no predice
+    por sí solo el comportamiento ante fotografías naturales. La mejora simultánea de accuracy, macro F1 y F1 de
+    todas las clases indica que el entrenamiento híbrido redujo la brecha de dominio y no benefició únicamente a
+    la clase mayoritaria.
+  </p>
+
+  <h2>6. Limitaciones y amenazas a la validez</h2>
+  <div class="warning">
+    Los resultados constituyen evidencia experimental preliminar y no una validación clínica o agronómica del
+    prototipo. Una predicción no sustituye la inspección de un especialista.
+  </div>
+  <ul>
+    <li>Se realizó una sola ejecución con semilla 42; falta medir variabilidad entre entrenamientos.</li>
+    <li>El test natural está desbalanceado y contiene únicamente 15 casos únicos de podredumbre negra.</li>
+    <li>La elevada cantidad de duplicados originales redujo el tamaño efectivo de algunas clases.</li>
+    <li>El checkpoint híbrido fue seleccionado mediante validación controlada, no mediante validación natural.</li>
+    <li>Los resultados perfectos en PlantVillage deben interpretarse considerando la homogeneidad visual de esa fuente.</li>
+    <li>Falta una evaluación externa con fotografías locales independientes de ambos datasets públicos.</li>
+  </ul>
+
+  <h2>7. Conclusiones y próximos pasos</h2>
+  <p>
+    Manteniendo la arquitectura y las categorías, el entrenamiento híbrido elevó la exactitud natural de 0,2017
+    a 0,9061 y el macro F1 de 0,2050 a 0,8441, sin degradar el test controlado. Esto aporta evidencia de que la
+    diversidad visual del entrenamiento es determinante para generalizar fuera de PlantVillage. No obstante, el
+    bajo soporte de podredumbre negra, la confusión entre tizón foliar y esca y la ausencia de múltiples
+    repeticiones impiden considerar el resultado definitivo.
+  </p>
+  <ol>
+    <li>Repetir ambos entrenamientos con al menos tres semillas y reportar promedio y desviación estándar.</li>
+    <li>Ampliar las fotografías únicas de podredumbre negra y tizón foliar.</li>
+    <li>Realizar una prueba externa con fotografías locales no empleadas durante el desarrollo.</li>
+    <li>Registrar predicción y confianza de casos externos mediante el prototipo Streamlit.</li>
+    <li>Evaluar calibración e incorporar una categoría de resultado incierto.</li>
+  </ol>
+
+  <h2>8. Fuentes y reproducibilidad</h2>
+  <ul class="small">
+    <li>PlantVillage: Mohanty, Hughes y Salathé (2016), <em>Using Deep Learning for Image-Based Plant Disease Detection</em>.</li>
+    <li>GVLiD, versión 5: DOI <code>10.17632/wkymf8bhcg.5</code>, licencia CC BY 4.0.</li>
+    <li>Semilla: 42. Código de preparación: <code>scripts/prepare_gvlid_hybrid_data.py</code>.</li>
+    <li>Evidencia: JSON y CSV de <code>resultados_comparacion/</code> y manifiestos de las particiones.</li>
+  </ul>
+</body>
+</html>
