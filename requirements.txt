@@ -1,5 +1,6 @@
 # data prep
 pillow
+ImageHash
 numpy
 scikit-learn
 kagglehub

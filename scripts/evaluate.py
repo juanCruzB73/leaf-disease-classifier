@@ -32,7 +32,10 @@ def main():
                         help="Checkpoint subdirectory (default: the architecture name).")
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--output", type=Path, help="New output JSON; refuses to overwrite.")
     args = parser.parse_args()
+    if args.output and args.output.exists():
+        raise FileExistsError(args.output)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     models_dir = Path(args.models_dir)
@@ -80,8 +83,15 @@ def main():
         "per_class": {name: report[name] for name in class_names},
         "confusion_matrix": cm.tolist(),
         "class_order": class_names,
+        "n_images": len(all_labels),
+        "correct": sum(a == b for a, b in zip(all_labels, all_preds)),
+        "incorrect": sum(a != b for a, b in zip(all_labels, all_preds)),
+        "predictions": [{"file": str(Path(path).relative_to(Path(args.data_dir))),
+                         "true": label, "predicted": pred}
+                        for (path, label), pred in zip(test_ds.samples, all_preds)],
     }
-    out_path = models_dir / run_name / "test_metrics.json"
+    out_path = args.output or (models_dir / run_name / "test_metrics.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
     print(f"\nWrote {out_path}")

@@ -1,0 +1,159 @@
+{
+  "seed": 42,
+  "architecture": "resnet50",
+  "initial_weights": "IMAGENET1K_V2",
+  "epochs": 8,
+  "finetune_epochs": 15,
+  "lr": 0.001,
+  "finetune_lr": 0.0001,
+  "batch_size": 32,
+  "image_size": 224,
+  "optimizer": "Adam",
+  "loss": "CrossEntropyLoss: total / (4 * class_count)",
+  "checkpoint_selection": "maximum macro F1 on controlled PlantVillage validation",
+  "transforms": {
+    "train": [
+      "RandomResizedCrop(224, scale=(0.8,1.0))",
+      "RandomHorizontalFlip()",
+      "RandomRotation(15)",
+      "ColorJitter(brightness=.2,contrast=.2,saturation=.2)",
+      "ToTensor",
+      "ImageNet Normalize"
+    ],
+    "evaluation": [
+      "Resize((224,224))",
+      "ToTensor",
+      "ImageNet Normalize"
+    ]
+  },
+  "started_at": "2026-09-15T23:24:34.193533+00:00",
+  "status": "trained",
+  "classes": {
+    "healthy_leaf": 0,
+    "vl_black_measles": 1,
+    "vl_black_rot": 2,
+    "vl_leaf_blight": 3
+  },
+  "preflight": {
+    "status": "passed",
+    "natural": {
+      "train": [
+        763,
+        498,
+        68,
+        105
+      ],
+      "val": [
+        164,
+        106,
+        14,
+        23
+      ],
+      "test": [
+        164,
+        106,
+        14,
+        23
+      ]
+    },
+    "controlled": {
+      "train": [
+        339,
+        1107,
+        944,
+        860
+      ],
+      "val": [
+        42,
+        138,
+        118,
+        108
+      ],
+      "test": [
+        42,
+        138,
+        118,
+        108
+      ]
+    },
+    "hybrid_train": 4684,
+    "controlled_test": 406,
+    "natural_test": 307,
+    "sha256_intersections": 0,
+    "phash_zero_intersections": 0,
+    "confirmed_group_intersections": 0,
+    "audit_sha256": "c77f9ec0ac41bb67a15fb35790c99c429aa93d13e5f64d4145216b33f6758ec4",
+    "integrity_sha256": "fbfee78579bda254f78dbee31c82362359011ee7c2cbbf1e81ae0fb2e961b7ef",
+    "controlled_reference": "Previous hybrid controlled subset; independent original baseline provenance unavailable"
+  },
+  "git_commit": "c82ef8b4b713b4720c9e99dfc02ace9dc4ee4979",
+  "command": [
+    "/usr/bin/python3",
+    "-u",
+    "/content/gvlid_clean_experiment/scripts/train.py",
+    "--model",
+    "resnet50",
+    "--data-dir",
+    "/content/gvlid_clean_experiment/data/gvlid_clean_processed",
+    "--label-map",
+    "/content/gvlid_clean_experiment/data/gvlid_clean_processed/label_map.json",
+    "--models-dir",
+    "/content/drive/MyDrive/resultados_comparacion_clean/models",
+    "--run-name",
+    "hybrid",
+    "--epochs",
+    "8",
+    "--finetune-epochs",
+    "15",
+    "--lr",
+    "0.001",
+    "--finetune-lr",
+    "0.0001",
+    "--batch-size",
+    "32",
+    "--image-size",
+    "224",
+    "--seed",
+    "42",
+    "--num-workers",
+    "0"
+  ],
+  "data_paths": {
+    "hybrid": "/content/gvlid_clean_experiment/data/gvlid_clean_processed",
+    "natural": "/content/gvlid_clean_experiment/data/gvlid_clean_natural_eval"
+  },
+  "training_counts": {
+    "PlantVillage": 3250,
+    "GVLiD": 1434
+  },
+  "gpu": "Tesla T4",
+  "torch_version": "2.11.0+cu128",
+  "versions": {
+    "torchvision": "0.26.0+cu128",
+    "Pillow": "11.3.0",
+    "ImageHash": "4.3.2",
+    "sklearn": "1.6.1",
+    "python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "source_hashes": {
+    "train.py": "aa439e5283208dcdc332372c62f1d598dd192f827dfad42750dca3ba964a444a",
+    "dataset.py": "b062cf2530b9beef0a323d72ef117f8b2285ef821f9e65b066e2219fa3b028e5",
+    "evaluate.py": "de1209a5733e0bd7912688ad8861065db66f5442abf1ad8da24f830a4ba715b5",
+    "run_gvlid_clean_experiment.py": "7c29d7579f4744e9a58d754601e4ac6e9970e745f4066d53a0d7f6ce06ad32c4"
+  },
+  "baseline_status": "Original checkpoint exists but no split/checkpoint provenance; comparison unavailable until comparable baseline retrained",
+  "initial_weights_sha256": "11ad3fa62ca79e40addfd354a8ec4b7c75143b3038b8d2a807fbc68deab379ca",
+  "completed_at": "2026-09-15T23:56:24.842046+00:00",
+  "checkpoint": "/content/drive/MyDrive/resultados_comparacion_clean/models/hybrid/best_model.pt",
+  "checkpoint_sha256": "bb1ecdb2eb9c5fbbb39fd4fe3e054ce44ca9ccdbb7ccb95bba96416aded12fb8",
+  "best_validation": {
+    "stage": "finetune",
+    "epoch": 3,
+    "train_loss": 0.01704876813026508,
+    "train_acc": 0.9933817250213492,
+    "train_macro_f1": 0.9929838069414131,
+    "val_loss": 0.001699529437972187,
+    "val_acc": 1.0,
+    "val_macro_f1": 1.0
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "original_images": 2995,
+  "unique_sha256": 2406,
+  "exact_duplicate_copies": 589,
+  "additional_phash_zero_merges": 171,
+  "duplicate_groups": 421,
+  "label_conflict_groups": 173,
+  "conflict_images": 526,
+  "retained_images": 2062,
+  "retained_by_class": {
+    "healthy_leaf": 1092,
+    "vl_black_measles": 716,
+    "vl_black_rot": 96,
+    "vl_leaf_blight": 158
+  },
+  "near_duplicate_pairs": 17,
+  "pending_review_pairs": 17,
+  "split_status": "blocked_pending_review",
+  "phash_policy": "64-bit pHash=0 grouped automatically; distances 1\u20135 require explicit review",
+  "versions": {
+    "Pillow": "12.3.0",
+    "ImageHash": "4.3.2"
+  }
+}

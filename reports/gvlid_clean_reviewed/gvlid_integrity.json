@@ -1,0 +1,62 @@
+{
+  "original_images": 2995,
+  "unique_sha256": 2406,
+  "exact_duplicate_copies": 589,
+  "additional_phash_zero_merges": 171,
+  "duplicate_groups": 421,
+  "label_conflict_groups": 179,
+  "conflict_images": 544,
+  "retained_images": 2048,
+  "retained_by_class": {
+    "healthy_leaf": 1091,
+    "vl_black_measles": 710,
+    "vl_black_rot": 96,
+    "vl_leaf_blight": 151
+  },
+  "near_duplicate_pairs": 17,
+  "pending_review_pairs": 0,
+  "split_status": "validated",
+  "phash_policy": "64-bit pHash=0 grouped automatically; distances 1\u20135 require explicit review",
+  "versions": {
+    "Pillow": "12.3.0",
+    "ImageHash": "4.3.2"
+  },
+  "seed": 42,
+  "natural_counts": {
+    "vl_black_rot": {
+      "train": 68,
+      "val": 14,
+      "test": 14
+    },
+    "vl_black_measles": {
+      "train": 498,
+      "val": 106,
+      "test": 106
+    },
+    "healthy_leaf": {
+      "train": 763,
+      "val": 164,
+      "test": 164
+    },
+    "vl_leaf_blight": {
+      "train": 105,
+      "val": 23,
+      "test": 23
+    }
+  },
+  "integrity": {
+    "all_split_sha256_intersections": 0,
+    "all_split_phash_zero_intersections": 0,
+    "all_split_confirmed_group_intersections": 0,
+    "label_conflicts_included": 0,
+    "controlled_all_splits_identical_to_reference": true
+  },
+  "controlled_reference": "data/gvlid_hybrid_processed",
+  "controlled_reference_is_previous_hybrid": true,
+  "label_map": {
+    "healthy_leaf": 0,
+    "vl_black_measles": 1,
+    "vl_black_rot": 2,
+    "vl_leaf_blight": 3
+  }
+}

@@ -1,8 +1,17 @@
 """Streamlit interface for the local leaf-disease classifier."""
 
+import os
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
+
+# The clean hybrid is the default for this UI; explicit model overrides still work.
+if "API_MODEL_PATH" not in os.environ and "API_MODEL_NAME" not in os.environ:
+    os.environ["API_MODEL_PATH"] = str(
+        Path(__file__).resolve().parent / "models/resnet50_gvlid_clean/best_model.pt"
+    )
 
 from api.inference import load_model, predict
 
@@ -32,7 +41,7 @@ def initialize_model():
 st.set_page_config(page_title="Clasificador de enfermedades de vid", page_icon="🍇")
 st.title("Clasificador de enfermedades de vid")
 st.write(
-    "Subí una fotografía de una hoja o un racimo para estimar la clase y consultar "
+    "Subí una fotografía de una hoja de vid para estimar la clase y consultar "
     "las probabilidades del modelo."
 )
 

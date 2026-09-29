@@ -32,3 +32,13 @@ models/**/*.pth
 
 
 .pytest_cache/
+
+# Local caches and portable clean experiment bundle
+.cache/
+colab_exports/
+resultados_comparacion_clean/
+
+# Original GVLiD data and generated duplicate-review previews
+/GVLiD/
+/near_duplicates_review/
+/reports/**/gvlid_near_duplicates_review/

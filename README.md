@@ -62,6 +62,10 @@ API_MODEL_NAME=mobilenet_v3 uvicorn api.main:app
 ## Interfaz gráfica con Streamlit
 
 La interfaz funciona directamente con el modelo local; no es necesario iniciar la API.
+Por defecto carga el híbrido limpio de cuatro clases desde
+`models/resnet50_gvlid_clean/best_model.pt`, con su `label_map.json` adyacente.
+Se verificó el checkpoint contra el SHA-256 de `resultados_comparacion_clean/experiment_manifest.json`.
+Las variables `API_MODEL_PATH` y `API_MODEL_NAME` permiten elegir otro modelo explícitamente.
 
 ```bash
 source .venv/bin/activate  # o .\.venv\Scripts\Activate.ps1 en Windows
@@ -72,7 +76,7 @@ streamlit run streamlit_app.py --server.headless true
 la primera vez que se corre en una máquina nueva.)
 
 Abrí <http://localhost:8501>, seleccioná una imagen JPEG o PNG y la aplicación
-mostrará la predicción, su confianza y un gráfico con las nueve probabilidades.
+mostrará la predicción, su confianza y un gráfico con las cuatro probabilidades.
 
 ## Datos, entrenamiento y evaluación
 

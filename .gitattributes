@@ -1,0 +1,3 @@
+
+# Preserve audit CSV bytes: experiment manifests verify their SHA-256.
+reports/**/*.csv -text

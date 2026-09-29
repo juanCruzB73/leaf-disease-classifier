@@ -1,0 +1,9 @@
+Experimento,Clase,Precision,Recall,F1,Imágenes
+Híbrido - controlado,healthy_leaf,1.0,1.0,1.0,42
+Híbrido - controlado,vl_black_measles,1.0,1.0,1.0,138
+Híbrido - controlado,vl_black_rot,1.0,1.0,1.0,118
+Híbrido - controlado,vl_leaf_blight,1.0,1.0,1.0,108
+Híbrido - natural,healthy_leaf,0.9820359281437125,1.0,0.9909365558912386,164
+Híbrido - natural,vl_black_measles,0.8503401360544217,0.9398496240601504,0.8928571428571429,133
+Híbrido - natural,vl_black_rot,0.9230769230769231,0.8,0.8571428571428571,15
+Híbrido - natural,vl_leaf_blight,0.7714285714285715,0.54,0.6352941176470588,50
